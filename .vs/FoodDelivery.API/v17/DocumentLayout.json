@@ -1,0 +1,148 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{BE791BE1-4EF3-4F83-9C67-5C141EAA1250}|FoodDelivery.API\\FoodDelivery.API.csproj|c:\\users\\hp\\desktop\\fooddelivery.api\\fooddelivery.api\\controllers\\restaurantcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{BE791BE1-4EF3-4F83-9C67-5C141EAA1250}|FoodDelivery.API\\FoodDelivery.API.csproj|solutionrelative:fooddelivery.api\\controllers\\restaurantcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0FE652BD-B47D-401B-8103-D760183535B5}|FoodDelivery.Core\\FoodDelivery.Core.csproj|c:\\users\\hp\\desktop\\fooddelivery.api\\fooddelivery.core\\dtos\\myrestaurantdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0FE652BD-B47D-401B-8103-D760183535B5}|FoodDelivery.Core\\FoodDelivery.Core.csproj|solutionrelative:fooddelivery.core\\dtos\\myrestaurantdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0FE652BD-B47D-401B-8103-D760183535B5}|FoodDelivery.Core\\FoodDelivery.Core.csproj|c:\\users\\hp\\desktop\\fooddelivery.api\\fooddelivery.core\\dtos\\updaterestaurantdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0FE652BD-B47D-401B-8103-D760183535B5}|FoodDelivery.Core\\FoodDelivery.Core.csproj|solutionrelative:fooddelivery.core\\dtos\\updaterestaurantdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BE791BE1-4EF3-4F83-9C67-5C141EAA1250}|FoodDelivery.API\\FoodDelivery.API.csproj|c:\\users\\hp\\desktop\\fooddelivery.api\\fooddelivery.api\\controllers\\ordercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{BE791BE1-4EF3-4F83-9C67-5C141EAA1250}|FoodDelivery.API\\FoodDelivery.API.csproj|solutionrelative:fooddelivery.api\\controllers\\ordercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0FE652BD-B47D-401B-8103-D760183535B5}|FoodDelivery.Core\\FoodDelivery.Core.csproj|c:\\users\\hp\\desktop\\fooddelivery.api\\fooddelivery.core\\dtos\\orderhistorydto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0FE652BD-B47D-401B-8103-D760183535B5}|FoodDelivery.Core\\FoodDelivery.Core.csproj|solutionrelative:fooddelivery.core\\dtos\\orderhistorydto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0FE652BD-B47D-401B-8103-D760183535B5}|FoodDelivery.Core\\FoodDelivery.Core.csproj|c:\\users\\hp\\desktop\\fooddelivery.api\\fooddelivery.core\\dtos\\cartitemresponsedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0FE652BD-B47D-401B-8103-D760183535B5}|FoodDelivery.Core\\FoodDelivery.Core.csproj|solutionrelative:fooddelivery.core\\dtos\\cartitemresponsedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 5,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{74946827-37a0-11d2-a273-00c04f8ef4ff}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{13b12e3e-c1b4-4539-9371-4fe9a0d523fc}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MyRestaurantDto.cs",
+              "DocumentMoniker": "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.Core\\DTOs\\MyRestaurantDto.cs",
+              "RelativeDocumentMoniker": "FoodDelivery.Core\\DTOs\\MyRestaurantDto.cs",
+              "ToolTip": "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.Core\\DTOs\\MyRestaurantDto.cs",
+              "RelativeToolTip": "FoodDelivery.Core\\DTOs\\MyRestaurantDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-10T17:59:00.6Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "RestaurantController.cs",
+              "DocumentMoniker": "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.API\\Controllers\\RestaurantController.cs",
+              "RelativeDocumentMoniker": "FoodDelivery.API\\Controllers\\RestaurantController.cs",
+              "ToolTip": "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.API\\Controllers\\RestaurantController.cs",
+              "RelativeToolTip": "FoodDelivery.API\\Controllers\\RestaurantController.cs",
+              "ViewState": "AgIAANoAAAAAAAAAAADwv/sAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-10T17:54:16.579Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "UpdateRestaurantDto.cs",
+              "DocumentMoniker": "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.Core\\DTOs\\UpdateRestaurantDto.cs",
+              "RelativeDocumentMoniker": "FoodDelivery.Core\\DTOs\\UpdateRestaurantDto.cs",
+              "ToolTip": "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.Core\\DTOs\\UpdateRestaurantDto.cs",
+              "RelativeToolTip": "FoodDelivery.Core\\DTOs\\UpdateRestaurantDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-10T17:53:39.587Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "OrderController.cs",
+              "DocumentMoniker": "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.API\\Controllers\\OrderController.cs",
+              "RelativeDocumentMoniker": "FoodDelivery.API\\Controllers\\OrderController.cs",
+              "ToolTip": "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.API\\Controllers\\OrderController.cs",
+              "RelativeToolTip": "FoodDelivery.API\\Controllers\\OrderController.cs",
+              "ViewState": "AgIAAAEAAAAAAAAAAAAmwP8AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-10T17:42:13.793Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "OrderHistoryDto.cs",
+              "DocumentMoniker": "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.Core\\DTOs\\OrderHistoryDto.cs",
+              "RelativeDocumentMoniker": "FoodDelivery.Core\\DTOs\\OrderHistoryDto.cs",
+              "ToolTip": "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.Core\\DTOs\\OrderHistoryDto.cs",
+              "RelativeToolTip": "FoodDelivery.Core\\DTOs\\OrderHistoryDto.cs",
+              "ViewState": "AgIAAAIAAAAAAAAAAAAxwA4AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-10T17:41:27.651Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "CartItemResponseDto.cs",
+              "DocumentMoniker": "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.Core\\DTOs\\CartItemResponseDto.cs",
+              "RelativeDocumentMoniker": "FoodDelivery.Core\\DTOs\\CartItemResponseDto.cs",
+              "ToolTip": "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.Core\\DTOs\\CartItemResponseDto.cs",
+              "RelativeToolTip": "FoodDelivery.Core\\DTOs\\CartItemResponseDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-10T17:12:16.219Z",
+              "EditorCaption": ""
+            }
+          ]
+        },
+        {
+          "DockedWidth": 420,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

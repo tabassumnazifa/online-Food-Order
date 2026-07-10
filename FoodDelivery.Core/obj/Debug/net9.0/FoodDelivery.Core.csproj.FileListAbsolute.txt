@@ -1,0 +1,12 @@
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Core\bin\Debug\net9.0\FoodDelivery.Core.deps.json
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Core\bin\Debug\net9.0\FoodDelivery.Core.dll
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Core\bin\Debug\net9.0\FoodDelivery.Core.pdb
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Core\obj\Debug\net9.0\FoodDelivery.Core.csproj.AssemblyReference.cache
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Core\obj\Debug\net9.0\FoodDelivery.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Core\obj\Debug\net9.0\FoodDelivery.Core.AssemblyInfoInputs.cache
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Core\obj\Debug\net9.0\FoodDelivery.Core.AssemblyInfo.cs
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Core\obj\Debug\net9.0\FoodDelivery.Core.csproj.CoreCompileInputs.cache
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Core\obj\Debug\net9.0\FoodDelivery.Core.dll
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Core\obj\Debug\net9.0\refint\FoodDelivery.Core.dll
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Core\obj\Debug\net9.0\FoodDelivery.Core.pdb
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Core\obj\Debug\net9.0\ref\FoodDelivery.Core.dll

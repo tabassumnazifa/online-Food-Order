@@ -1,0 +1,15 @@
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Infrastructure\bin\Debug\net9.0\FoodDelivery.Infrastructure.deps.json
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Infrastructure\bin\Debug\net9.0\FoodDelivery.Infrastructure.dll
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Infrastructure\bin\Debug\net9.0\FoodDelivery.Infrastructure.pdb
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Infrastructure\bin\Debug\net9.0\FoodDelivery.Core.dll
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Infrastructure\bin\Debug\net9.0\FoodDelivery.Core.pdb
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Infrastructure\obj\Debug\net9.0\FoodDelivery.Infrastructure.csproj.AssemblyReference.cache
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Infrastructure\obj\Debug\net9.0\FoodDelivery.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Infrastructure\obj\Debug\net9.0\FoodDelivery.Infrastructure.AssemblyInfoInputs.cache
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Infrastructure\obj\Debug\net9.0\FoodDelivery.Infrastructure.AssemblyInfo.cs
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Infrastructure\obj\Debug\net9.0\FoodDelivery.Infrastructure.csproj.CoreCompileInputs.cache
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Infrastructure\obj\Debug\net9.0\FoodDeli.7752ACBA.Up2Date
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Infrastructure\obj\Debug\net9.0\FoodDelivery.Infrastructure.dll
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Infrastructure\obj\Debug\net9.0\refint\FoodDelivery.Infrastructure.dll
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Infrastructure\obj\Debug\net9.0\FoodDelivery.Infrastructure.pdb
+C:\Users\HP\Desktop\FoodDelivery.API\FoodDelivery.Infrastructure\obj\Debug\net9.0\ref\FoodDelivery.Infrastructure.dll
