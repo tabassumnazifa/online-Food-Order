@@ -204,6 +204,9 @@ namespace FoodDelivery.Infrastructure.Migrations
                     b.Property<int>("RestaurantId")
                         .HasColumnType("int");
 
+                    b.Property<string>("RiderId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -216,6 +219,8 @@ namespace FoodDelivery.Infrastructure.Migrations
                     b.HasIndex("CustomerId");
 
                     b.HasIndex("RestaurantId");
+
+                    b.HasIndex("RiderId");
 
                     b.ToTable("Orders");
                 });
@@ -247,6 +252,43 @@ namespace FoodDelivery.Infrastructure.Migrations
                     b.HasIndex("OrderId");
 
                     b.ToTable("OrderItems");
+                });
+
+            modelBuilder.Entity("FoodDelivery.Core.Models.Payment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("CustomerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("PaymentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PaymentMethod")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PaymentStatus")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TransactionId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("FoodDelivery.Core.Models.Restaurant", b =>
@@ -472,9 +514,16 @@ namespace FoodDelivery.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("FoodDelivery.Core.Models.ApplicationUser", "Rider")
+                        .WithMany()
+                        .HasForeignKey("RiderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Customer");
 
                     b.Navigation("Restaurant");
+
+                    b.Navigation("Rider");
                 });
 
             modelBuilder.Entity("FoodDelivery.Core.Models.OrderItem", b =>
@@ -492,6 +541,17 @@ namespace FoodDelivery.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Food");
+
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("FoodDelivery.Core.Models.Payment", b =>
+                {
+                    b.HasOne("FoodDelivery.Core.Models.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Order");
                 });

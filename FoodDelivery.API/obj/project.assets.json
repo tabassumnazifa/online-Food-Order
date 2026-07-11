@@ -5639,11 +5639,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.API\\FoodDelivery.API.csproj",
+      "projectUniqueName": "C:\\Users\\HP\\Desktop\\online Food Order\\FoodDelivery.API\\FoodDelivery.API.csproj",
       "projectName": "FoodDelivery.API",
-      "projectPath": "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.API\\FoodDelivery.API.csproj",
+      "projectPath": "C:\\Users\\HP\\Desktop\\online Food Order\\FoodDelivery.API\\FoodDelivery.API.csproj",
       "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.API\\obj\\",
+      "outputPath": "C:\\Users\\HP\\Desktop\\online Food Order\\FoodDelivery.API\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -5665,11 +5665,11 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "projectReferences": {
-            "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.Core\\FoodDelivery.Core.csproj": {
-              "projectPath": "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.Core\\FoodDelivery.Core.csproj"
+            "C:\\Users\\HP\\Desktop\\online Food Order\\FoodDelivery.Core\\FoodDelivery.Core.csproj": {
+              "projectPath": "C:\\Users\\HP\\Desktop\\online Food Order\\FoodDelivery.Core\\FoodDelivery.Core.csproj"
             },
-            "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.Infrastructure\\FoodDelivery.Infrastructure.csproj": {
-              "projectPath": "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.Infrastructure\\FoodDelivery.Infrastructure.csproj"
+            "C:\\Users\\HP\\Desktop\\online Food Order\\FoodDelivery.Infrastructure\\FoodDelivery.Infrastructure.csproj": {
+              "projectPath": "C:\\Users\\HP\\Desktop\\online Food Order\\FoodDelivery.Infrastructure\\FoodDelivery.Infrastructure.csproj"
             }
           }
         }

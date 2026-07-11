@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.Core\\FoodDelivery.Core.csproj": {}
+    "C:\\Users\\HP\\Desktop\\online Food Order\\FoodDelivery.Core\\FoodDelivery.Core.csproj": {}
   },
   "projects": {
-    "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.Core\\FoodDelivery.Core.csproj": {
+    "C:\\Users\\HP\\Desktop\\online Food Order\\FoodDelivery.Core\\FoodDelivery.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.Core\\FoodDelivery.Core.csproj",
+        "projectUniqueName": "C:\\Users\\HP\\Desktop\\online Food Order\\FoodDelivery.Core\\FoodDelivery.Core.csproj",
         "projectName": "FoodDelivery.Core",
-        "projectPath": "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.Core\\FoodDelivery.Core.csproj",
+        "projectPath": "C:\\Users\\HP\\Desktop\\online Food Order\\FoodDelivery.Core\\FoodDelivery.Core.csproj",
         "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\HP\\Desktop\\FoodDelivery.API\\FoodDelivery.Core\\obj\\",
+        "outputPath": "C:\\Users\\HP\\Desktop\\online Food Order\\FoodDelivery.Core\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
