@@ -11,7 +11,6 @@ namespace FoodDelivery.Infrastructure.Data
         {
         }
 
-
         // =========================
         // DATABASE TABLES
         // =========================
@@ -30,11 +29,11 @@ namespace FoodDelivery.Infrastructure.Data
 
         public DbSet<Payment> Payments { get; set; }
 
+        public DbSet<Feedback> Feedbacks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-
 
             // =========================
             // RESTAURANT -> OWNER
@@ -45,8 +44,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .HasForeignKey(r => r.OwnerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-
-
             // =========================
             // FOOD -> RESTAURANT
             // =========================
@@ -55,8 +52,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .WithMany(r => r.Foods)
                 .HasForeignKey(f => f.RestaurantId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-
 
             // =========================
             // FOOD -> CATEGORY
@@ -67,8 +62,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .HasForeignKey(f => f.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-
-
             // =========================
             // ORDER -> CUSTOMER
             // =========================
@@ -77,8 +70,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .WithMany()
                 .HasForeignKey(o => o.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-
 
             // =========================
             // ORDER -> RIDER
@@ -89,8 +80,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .HasForeignKey(o => o.RiderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-
-
             // =========================
             // ORDER -> RESTAURANT
             // =========================
@@ -99,8 +88,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .WithMany()
                 .HasForeignKey(o => o.RestaurantId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-
 
             // =========================
             // ORDER ITEM -> ORDER
@@ -111,8 +98,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .HasForeignKey(oi => oi.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-
-
             // =========================
             // ORDER ITEM -> FOOD
             // =========================
@@ -121,8 +106,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .WithMany()
                 .HasForeignKey(oi => oi.FoodId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-
 
             // =========================
             // CART ITEM -> CUSTOMER
@@ -133,8 +116,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .HasForeignKey(c => c.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-
-
             // =========================
             // CART ITEM -> FOOD
             // =========================
@@ -144,8 +125,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .HasForeignKey(c => c.FoodId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-
-
             // =========================
             // PAYMENT -> ORDER
             // =========================
@@ -153,6 +132,24 @@ namespace FoodDelivery.Infrastructure.Data
                 .HasOne(p => p.Order)
                 .WithMany()
                 .HasForeignKey(p => p.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // =========================
+            // FEEDBACK -> CUSTOMER
+            // =========================
+            builder.Entity<Feedback>()
+                .HasOne(f => f.Customer)
+                .WithMany()
+                .HasForeignKey(f => f.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // =========================
+            // FEEDBACK -> RESTAURANT
+            // =========================
+            builder.Entity<Feedback>()
+                .HasOne(f => f.Restaurant)
+                .WithMany()
+                .HasForeignKey(f => f.RestaurantId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }
