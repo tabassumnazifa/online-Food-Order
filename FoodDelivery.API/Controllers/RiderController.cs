@@ -20,7 +20,6 @@ namespace FoodDelivery.API.Controllers
             _context = context;
         }
 
-
         // =========================
         // RIDER DASHBOARD
         // =========================
@@ -34,7 +33,6 @@ namespace FoodDelivery.API.Controllers
                 return Unauthorized();
             }
 
-
             var dashboard = new RiderDashboardDto
             {
                 AvailableOrders = await _context.Orders
@@ -42,18 +40,15 @@ namespace FoodDelivery.API.Controllers
                         o.RiderId == null &&
                         o.Status == "Placed"),
 
-
                 ActiveOrders = await _context.Orders
                     .CountAsync(o =>
                         o.RiderId == riderId &&
                         o.Status != "Delivered"),
 
-
                 CompletedOrders = await _context.Orders
                     .CountAsync(o =>
                         o.RiderId == riderId &&
                         o.Status == "Delivered"),
-
 
                 TotalDeliveries = await _context.Orders
                     .CountAsync(o =>
@@ -61,11 +56,8 @@ namespace FoodDelivery.API.Controllers
                         o.Status == "Delivered")
             };
 
-
             return Ok(dashboard);
         }
-
-
 
         // =========================
         // AVAILABLE ORDERS
@@ -90,11 +82,8 @@ namespace FoodDelivery.API.Controllers
                 })
                 .ToListAsync();
 
-
             return Ok(orders);
         }
-
-
 
         // =========================
         // ACCEPT ORDER
@@ -109,35 +98,28 @@ namespace FoodDelivery.API.Controllers
                 return Unauthorized();
             }
 
-
             var order = await _context.Orders
                 .FirstOrDefaultAsync(o => o.Id == orderId);
-
 
             if (order == null)
             {
                 return NotFound("Order not found.");
             }
 
-
             if (order.RiderId != null)
             {
                 return BadRequest("This order is already assigned.");
             }
-
 
             if (order.Status != "Placed")
             {
                 return BadRequest("This order is not available.");
             }
 
-
             order.RiderId = riderId;
             order.Status = "Accepted";
 
-
             await _context.SaveChangesAsync();
-
 
             return Ok(new
             {
@@ -146,8 +128,6 @@ namespace FoodDelivery.API.Controllers
                 Status = order.Status
             });
         }
-
-
 
         // =========================
         // MY ASSIGNED ORDERS
@@ -161,7 +141,6 @@ namespace FoodDelivery.API.Controllers
             {
                 return Unauthorized();
             }
-
 
             var orders = await _context.Orders
                 .Where(o => o.RiderId == riderId)
@@ -178,8 +157,56 @@ namespace FoodDelivery.API.Controllers
                 })
                 .ToListAsync();
 
-
             return Ok(orders);
+        }
+
+        // =========================
+        // UPDATE DELIVERY STATUS
+        // =========================
+        [HttpPut("update-delivery-status/{orderId}")]
+        public async Task<IActionResult> UpdateDeliveryStatus(
+            int orderId,
+            UpdateDeliveryStatusDto model)
+        {
+            var riderId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(riderId))
+            {
+                return Unauthorized();
+            }
+
+            var order = await _context.Orders
+                .FirstOrDefaultAsync(o =>
+                    o.Id == orderId &&
+                    o.RiderId == riderId);
+
+            if (order == null)
+            {
+                return NotFound("Order not found.");
+            }
+
+            // Validate delivery status transition
+            var validTransition =
+                (order.Status == "Accepted" && model.Status == "PickedUp") ||
+                (order.Status == "PickedUp" && model.Status == "OnTheWay") ||
+                (order.Status == "OnTheWay" && model.Status == "Delivered");
+
+            if (!validTransition)
+            {
+                return BadRequest(
+                    $"Cannot change status from '{order.Status}' to '{model.Status}'.");
+            }
+
+            order.Status = model.Status;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                Message = "Delivery status updated successfully.",
+                OrderId = order.Id,
+                NewStatus = order.Status
+            });
         }
     }
 }
