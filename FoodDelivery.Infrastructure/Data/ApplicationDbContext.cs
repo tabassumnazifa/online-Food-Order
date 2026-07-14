@@ -14,7 +14,6 @@ namespace FoodDelivery.Infrastructure.Data
         // =========================
         // DATABASE TABLES
         // =========================
-
         public DbSet<Restaurant> Restaurants { get; set; }
 
         public DbSet<Category> Categories { get; set; }
@@ -148,7 +147,7 @@ namespace FoodDelivery.Infrastructure.Data
             // =========================
             builder.Entity<Feedback>()
                 .HasOne(f => f.Restaurant)
-                .WithMany()
+                .WithMany(r => r.Feedbacks)
                 .HasForeignKey(f => f.RestaurantId)
                 .OnDelete(DeleteBehavior.Cascade);
         }

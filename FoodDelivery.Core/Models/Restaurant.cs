@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FoodDelivery.Core.Models
@@ -24,14 +23,25 @@ namespace FoodDelivery.Core.Models
 
         public string? ImageUrl { get; set; }
 
-        // Foreign Key → Restaurant Owner (ApplicationUser)
+        // =========================
+        // RESTAURANT OWNER
+        // =========================
         [Required]
         public string OwnerId { get; set; } = string.Empty;
 
         [ForeignKey(nameof(OwnerId))]
         public ApplicationUser? Owner { get; set; }
 
-        // One Restaurant can have many Food items
-        public ICollection<Food> Foods { get; set; } = new List<Food>();
+        // =========================
+        // FOODS
+        // =========================
+        public ICollection<Food> Foods { get; set; }
+            = new List<Food>();
+
+        // =========================
+        // FEEDBACKS
+        // =========================
+        public ICollection<Feedback> Feedbacks { get; set; }
+            = new List<Feedback>();
     }
 }
