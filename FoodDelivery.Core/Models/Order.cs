@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using FoodDelivery.Core.Enums;
 
 namespace FoodDelivery.Core.Models
 {
@@ -9,9 +10,11 @@ namespace FoodDelivery.Core.Models
         public int Id { get; set; }
 
 
+
         // =========================
         // CUSTOMER RELATION
         // =========================
+
         [Required]
         public string CustomerId { get; set; } = string.Empty;
 
@@ -23,6 +26,7 @@ namespace FoodDelivery.Core.Models
         // =========================
         // RESTAURANT RELATION
         // =========================
+
         [Required]
         public int RestaurantId { get; set; }
 
@@ -34,6 +38,7 @@ namespace FoodDelivery.Core.Models
         // =========================
         // RIDER RELATION
         // =========================
+
         public string? RiderId { get; set; }
 
         [ForeignKey(nameof(RiderId))]
@@ -44,6 +49,7 @@ namespace FoodDelivery.Core.Models
         // =========================
         // ORDER INFORMATION
         // =========================
+
         public DateTime OrderDate { get; set; } = DateTime.UtcNow;
 
 
@@ -51,14 +57,52 @@ namespace FoodDelivery.Core.Models
         public decimal TotalAmount { get; set; }
 
 
+
+        // Actual database field
         [Required]
-        public string Status { get; set; } = "Pending";
+        public OrderStatus OrderStatus { get; set; } = OrderStatus.Pending;
+
+
+
+        // Compatibility property
+        // Used by existing controllers
+        // Not stored in database
+        [NotMapped]
+        public string Status
+        {
+            get => OrderStatus.ToString();
+
+            set
+            {
+                if (Enum.TryParse<OrderStatus>(
+                    value,
+                    true,
+                    out var parsedStatus))
+                {
+                    OrderStatus = parsedStatus;
+                }
+            }
+        }
+
+
+
+        [Required]
+        public string DeliveryAddress { get; set; } = string.Empty;
+
+
+
+        // =========================
+        // PAYMENT RELATION
+        // =========================
+
+        public Payment? Payment { get; set; }
 
 
 
         // =========================
         // ORDER ITEMS
         // =========================
+
         public ICollection<OrderItem> OrderItems { get; set; }
             = new List<OrderItem>();
     }

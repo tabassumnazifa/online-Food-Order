@@ -4,6 +4,7 @@ using FoodDelivery.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FoodDelivery.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260719143618_AddOfferModule")]
+    partial class AddOfferModule
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -609,7 +612,7 @@ namespace FoodDelivery.Infrastructure.Migrations
             modelBuilder.Entity("FoodDelivery.Core.Models.Offer", b =>
                 {
                     b.HasOne("FoodDelivery.Core.Models.Restaurant", "Restaurant")
-                        .WithMany("Offers")
+                        .WithMany()
                         .HasForeignKey("RestaurantId")
                         .OnDelete(DeleteBehavior.Restrict);
 
@@ -756,8 +759,6 @@ namespace FoodDelivery.Infrastructure.Migrations
                     b.Navigation("Feedbacks");
 
                     b.Navigation("Foods");
-
-                    b.Navigation("Offers");
 
                     b.Navigation("Orders");
                 });

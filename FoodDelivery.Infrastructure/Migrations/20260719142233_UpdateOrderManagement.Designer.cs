@@ -4,6 +4,7 @@ using FoodDelivery.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FoodDelivery.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260719142233_UpdateOrderManagement")]
+    partial class UpdateOrderManagement
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -221,52 +224,6 @@ namespace FoodDelivery.Infrastructure.Migrations
                     b.ToTable("Foods");
                 });
 
-            modelBuilder.Entity("FoodDelivery.Core.Models.Offer", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CouponCode")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("DiscountPercentage")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<decimal?>("MaximumDiscount")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
-
-                    b.Property<int?>("RestaurantId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RestaurantId");
-
-                    b.ToTable("Offers");
-                });
-
             modelBuilder.Entity("FoodDelivery.Core.Models.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -348,8 +305,7 @@ namespace FoodDelivery.Infrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("CustomerId")
                         .IsRequired()
@@ -606,16 +562,6 @@ namespace FoodDelivery.Infrastructure.Migrations
                     b.Navigation("Restaurant");
                 });
 
-            modelBuilder.Entity("FoodDelivery.Core.Models.Offer", b =>
-                {
-                    b.HasOne("FoodDelivery.Core.Models.Restaurant", "Restaurant")
-                        .WithMany("Offers")
-                        .HasForeignKey("RestaurantId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Restaurant");
-                });
-
             modelBuilder.Entity("FoodDelivery.Core.Models.Order", b =>
                 {
                     b.HasOne("FoodDelivery.Core.Models.ApplicationUser", "Customer")
@@ -756,8 +702,6 @@ namespace FoodDelivery.Infrastructure.Migrations
                     b.Navigation("Feedbacks");
 
                     b.Navigation("Foods");
-
-                    b.Navigation("Offers");
 
                     b.Navigation("Orders");
                 });
