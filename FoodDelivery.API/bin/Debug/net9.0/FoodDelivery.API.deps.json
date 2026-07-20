@@ -1214,6 +1214,7 @@
       "FoodDelivery.Infrastructure/1.0.0": {
         "dependencies": {
           "FoodDelivery.Core": "1.0.0",
+          "MailKit": "4.17.0",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "9.0.17",
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "9.0.17",
           "Microsoft.EntityFrameworkCore.SqlServer": "9.0.17"

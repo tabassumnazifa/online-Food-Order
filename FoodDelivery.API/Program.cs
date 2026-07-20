@@ -1,28 +1,51 @@
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using System.Text;
 using FoodDelivery.Core.Models;
 using FoodDelivery.Infrastructure.Data;
 using FoodDelivery.Infrastructure.Seed;
+using FoodDelivery.Infrastructure.Services;
+using FoodDelivery.Infrastructure.Settings;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// -------------------- DB Context --------------------
+// ======================================================
+// DATABASE
+// ======================================================
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// -------------------- Identity --------------------
+
+// ======================================================
+// IDENTITY
+// ======================================================
+
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-// -------------------- JWT CONFIG --------------------
+
+// ======================================================
+// EMAIL
+// ======================================================
+
+builder.Services.Configure<MailSettings>(
+    builder.Configuration.GetSection("MailSettings"));
+
+builder.Services.AddScoped<IEmailService, EmailService>();
+
+
+// ======================================================
+// JWT AUTHENTICATION
+// ======================================================
+
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
+var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -37,16 +60,26 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
+
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
+
         IssuerSigningKey = new SymmetricSecurityKey(key)
     };
 });
 
-// -------------------- Controllers --------------------
+
+// ======================================================
+// CONTROLLERS
+// ======================================================
+
 builder.Services.AddControllers();
 
-// -------------------- Swagger (FIXED + JWT SUPPORT) --------------------
+
+// ======================================================
+// SWAGGER
+// ======================================================
+
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(options =>
@@ -54,11 +87,11 @@ builder.Services.AddSwaggerGen(options =>
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
+        Description = "Enter JWT token as: Bearer {token}",
+        In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
         Scheme = "bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Enter: Bearer {your JWT token}"
+        BearerFormat = "JWT"
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -72,14 +105,23 @@ builder.Services.AddSwaggerGen(options =>
                     Id = "Bearer"
                 }
             },
-            new string[] {}
+            Array.Empty<string>()
         }
     });
 });
 
+
+// ======================================================
+// BUILD
+// ======================================================
+
 var app = builder.Build();
 
-// -------------------- Middleware --------------------
+
+// ======================================================
+// MIDDLEWARE
+// ======================================================
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -88,15 +130,26 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication();   // MUST come before Authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
-// -------------------- Seed Roles --------------------
+
+// ======================================================
+// SEED ROLES
+// ======================================================
+
 using (var scope = app.Services.CreateScope())
 {
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var roleManager = scope.ServiceProvider
+        .GetRequiredService<RoleManager<IdentityRole>>();
+
     await RoleSeeder.SeedRolesAsync(roleManager);
 }
+
+
+// ======================================================
+// MAP CONTROLLERS
+// ======================================================
 
 app.MapControllers();
 
