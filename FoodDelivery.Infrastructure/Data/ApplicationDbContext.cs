@@ -37,6 +37,13 @@ namespace FoodDelivery.Infrastructure.Data
         public DbSet<Offer> Offers { get; set; }
 
 
+        // =========================
+        // SECURITY / POLICY TABLE
+        // =========================
+
+        public DbSet<Policy> Policies { get; set; }
+
+
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -72,8 +79,6 @@ namespace FoodDelivery.Infrastructure.Data
 
             // =========================
             // OFFER -> RESTAURANT
-            // OPTIONAL RELATION
-            // PLATFORM OFFER = NULL
             // =========================
 
             builder.Entity<Offer>()
@@ -81,7 +86,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .WithMany(r => r.Offers)
                 .HasForeignKey(o => o.RestaurantId)
                 .OnDelete(DeleteBehavior.Restrict);
-
 
 
 
@@ -249,6 +253,21 @@ namespace FoodDelivery.Infrastructure.Data
                 .WithMany(r => r.Feedbacks)
                 .HasForeignKey(f => f.RestaurantId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+
+
+            // =========================
+            // POLICY CONFIGURATION
+            // =========================
+
+            builder.Entity<Policy>()
+                .Property(p => p.Title)
+                .HasMaxLength(200);
+
+
+            builder.Entity<Policy>()
+                .Property(p => p.Type)
+                .HasMaxLength(50);
         }
     }
 }
