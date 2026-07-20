@@ -1,6 +1,7 @@
 ﻿using FoodDelivery.Core.DTOs;
 using FoodDelivery.Core.Enums;
 using FoodDelivery.Core.Models;
+using FoodDelivery.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -16,16 +17,22 @@ namespace FoodDelivery.API.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
 
-        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration configuration)
+        public AuthController(
+            UserManager<ApplicationUser> userManager,
+            IConfiguration configuration,
+            IEmailService emailService)
         {
             _userManager = userManager;
             _configuration = configuration;
+            _emailService = emailService;
         }
 
-        // =========================
+        // =====================================================
         // CUSTOMER REGISTRATION
-        // =========================
+        // =====================================================
+
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto model)
         {
@@ -51,9 +58,10 @@ namespace FoodDelivery.API.Controllers
             return Ok("Customer registered successfully.");
         }
 
-        // =========================
+        // =====================================================
         // RESTAURANT OWNER REGISTRATION
-        // =========================
+        // =====================================================
+
         [HttpPost("register-restaurant-owner")]
         public async Task<IActionResult> RegisterRestaurantOwner(RegisterDto model)
         {
@@ -79,18 +87,17 @@ namespace FoodDelivery.API.Controllers
             return Ok("Restaurant owner registered successfully.");
         }
 
-        // =========================
+        // =====================================================
         // DELIVERY RIDER REGISTRATION
-        // =========================
+        // =====================================================
+
         [HttpPost("register-rider")]
         public async Task<IActionResult> RegisterDeliveryRider(RegisterDto model)
         {
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
 
             if (existingUser != null)
-            {
                 return BadRequest("Email is already registered.");
-            }
 
             var user = new ApplicationUser
             {
@@ -102,40 +109,39 @@ namespace FoodDelivery.API.Controllers
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (!result.Succeeded)
-            {
                 return BadRequest(result.Errors);
-            }
 
             await _userManager.AddToRoleAsync(user, Roles.DeliveryRider);
 
             return Ok("Delivery rider registered successfully.");
         }
 
-        // =========================
-        // LOGIN (JWT TOKEN)
-        // =========================
+        // =====================================================
+        // LOGIN
+        // =====================================================
+
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
 
             if (user == null)
-                return Unauthorized("Invalid email or password");
+                return Unauthorized("Invalid email or password.");
 
             var passwordValid = await _userManager.CheckPasswordAsync(user, model.Password);
 
             if (!passwordValid)
-                return Unauthorized("Invalid email or password");
+                return Unauthorized("Invalid email or password.");
 
             var jwtSettings = _configuration.GetSection("Jwt");
-            var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
+            var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
 
             var roles = await _userManager.GetRolesAsync(user);
 
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Email, user.Email)
+                new Claim(ClaimTypes.Email, user.Email!)
             };
 
             foreach (var role in roles)
@@ -147,7 +153,8 @@ namespace FoodDelivery.API.Controllers
                 issuer: jwtSettings["Issuer"],
                 audience: jwtSettings["Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(Convert.ToDouble(jwtSettings["DurationInMinutes"])),
+                expires: DateTime.Now.AddMinutes(
+                    Convert.ToDouble(jwtSettings["DurationInMinutes"])),
                 signingCredentials: new SigningCredentials(
                     new SymmetricSecurityKey(key),
                     SecurityAlgorithms.HmacSha256)
@@ -155,7 +162,7 @@ namespace FoodDelivery.API.Controllers
 
             return Ok(new
             {
-                token = new JwtSecurityTokenHandler().WriteToken(token)
+                Token = new JwtSecurityTokenHandler().WriteToken(token)
             });
         }
     }
