@@ -36,6 +36,8 @@ namespace FoodDelivery.Infrastructure.Data
 
         public DbSet<Offer> Offers { get; set; }
 
+        public DbSet<RiderLocation> RiderLocations { get; set; }
+
 
         // =========================
         // SECURITY / POLICY TABLE
@@ -59,6 +61,12 @@ namespace FoodDelivery.Infrastructure.Data
             builder.Entity<Order>()
                 .Property(o => o.OrderStatus)
                 .HasConversion<string>();
+
+                builder.Entity<RiderLocation>()
+    .HasOne(r => r.Rider)
+    .WithMany()
+    .HasForeignKey(r => r.RiderId)
+    .OnDelete(DeleteBehavior.Cascade);
 
 
 
