@@ -1,9 +1,7 @@
-namespace FoodDelivery.Core.Enums
+public enum PaymentStatus
 {
-    public enum PaymentStatus
-    {
-        Pending = 1,
-        Paid = 2,
-        Failed = 3
-    }
+    Pending = 1,
+    Paid = 2,
+    Failed = 3,
+    Cancelled = 4
 }

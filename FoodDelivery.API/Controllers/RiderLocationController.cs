@@ -1,9 +1,12 @@
 using System.Security.Claims;
+using FoodDelivery.API.Hubs;
 using FoodDelivery.Core.DTOs;
+using FoodDelivery.Core.Enums;
 using FoodDelivery.Core.Models;
 using FoodDelivery.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace FoodDelivery.API.Controllers
@@ -13,10 +16,14 @@ namespace FoodDelivery.API.Controllers
     public class RiderLocationController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IHubContext<RiderLocationHub> _hubContext;
 
-        public RiderLocationController(ApplicationDbContext context)
+        public RiderLocationController(
+            ApplicationDbContext context,
+            IHubContext<RiderLocationHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         // =====================================================
@@ -25,7 +32,8 @@ namespace FoodDelivery.API.Controllers
 
         [Authorize(Roles = "DeliveryRider")]
         [HttpPut("update")]
-        public async Task<IActionResult> UpdateLocation(UpdateRiderLocationDto model)
+        public async Task<IActionResult> UpdateLocation(
+            UpdateRiderLocationDto model)
         {
             var riderId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -57,6 +65,34 @@ namespace FoodDelivery.API.Controllers
             }
 
             await _context.SaveChangesAsync();
+
+            // =====================================================
+            // SEND LIVE LOCATION TO ACTIVE ORDER TRACKING GROUPS
+            // =====================================================
+
+            var activeOrders = await _context.Orders
+                .Where(o =>
+                    o.RiderId == riderId &&
+                    o.OrderStatus != OrderStatus.Delivered &&
+                    o.OrderStatus != OrderStatus.Cancelled)
+                .Select(o => o.Id)
+                .ToListAsync();
+
+            foreach (var orderId in activeOrders)
+            {
+                await _hubContext.Clients
+                    .Group($"order-{orderId}")
+                    .SendAsync(
+                        "ReceiveLocation",
+                        new
+                        {
+                            OrderId = orderId,
+                            RiderId = riderId,
+                            Latitude = location.Latitude,
+                            Longitude = location.Longitude,
+                            UpdatedAt = location.UpdatedAt
+                        });
+            }
 
             return Ok(new
             {
