@@ -248,5 +248,26 @@ namespace FoodDelivery.API.Controllers
                 NewStatus = order.Status
             });
         }
+
+        // =========================
+// GET ALL RESTAURANTS (PUBLIC)
+// =========================
+[AllowAnonymous]
+[HttpGet("all")]
+public async Task<IActionResult> GetAllRestaurants()
+{
+    var restaurants = await _context.Restaurants
+        .Select(r => new
+        {
+            r.Id,
+            r.Name,
+            r.Description,
+            r.Address,
+            r.Phone
+        })
+        .ToListAsync();
+
+    return Ok(restaurants);
+}
     }
 }
