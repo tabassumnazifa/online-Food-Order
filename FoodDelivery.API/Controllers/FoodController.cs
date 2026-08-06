@@ -38,7 +38,14 @@ namespace FoodDelivery.API.Controllers
             {
                 return NotFound("Category not found.");
             }
+var exists = await _context.Foods.AnyAsync(f =>
+    f.RestaurantId == model.RestaurantId &&
+    f.Name == model.Name);
 
+if (exists)
+{
+    return BadRequest("Food already exists in this restaurant.");
+}
             // Create a new food item
             var food = new Food
             {
@@ -53,7 +60,10 @@ namespace FoodDelivery.API.Controllers
             _context.Foods.Add(food);
             await _context.SaveChangesAsync();
 
-            return Ok("Food added successfully.");
+            return Ok(new
+{
+    Message = "Food added successfully."
+});
         }
 
         // =========================
@@ -81,7 +91,44 @@ namespace FoodDelivery.API.Controllers
 
             return Ok(foods);
         }
+// =========================
+// GET FOODS BY RESTAURANT
+// =========================
+[HttpGet("restaurant/{restaurantId}")]
+public async Task<IActionResult> GetFoodsByRestaurant(int restaurantId)
+{
+    var restaurantExists = await _context.Restaurants
+        .AnyAsync(r => r.Id == restaurantId);
 
+    if (!restaurantExists)
+    {
+        return NotFound("Restaurant not found.");
+    }
+
+    var foods = await _context.Foods
+        .Where(f => f.RestaurantId == restaurantId)
+        .Include(f => f.Restaurant)
+        .Include(f => f.Category)
+        .Select(f => new FoodResponseDto
+        {
+            Id = f.Id,
+            Name = f.Name,
+            Description = f.Description,
+            Price = f.Price,
+            IsAvailable = f.IsAvailable,
+
+            RestaurantId = f.RestaurantId,
+            RestaurantName = f.Restaurant!.Name,
+
+            CategoryId = f.CategoryId,
+            CategoryName = f.Category!.Name
+        })
+        .OrderBy(f => f.CategoryId)
+        .ThenBy(f => f.Name)
+        .ToListAsync();
+
+    return Ok(foods);
+}
         // =========================
         // GET FOOD BY ID
         // =========================
@@ -144,7 +191,10 @@ namespace FoodDelivery.API.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok("Food updated successfully.");
+            return Ok(new
+{
+    Message = "Food updated successfully."
+});
         }
 
         // =========================
@@ -163,7 +213,10 @@ namespace FoodDelivery.API.Controllers
             _context.Foods.Remove(food);
             await _context.SaveChangesAsync();
 
-            return Ok("Food deleted successfully.");
+           return Ok(new
+{
+    Message = "Food deleted successfully."
+});
         }
     }
 }

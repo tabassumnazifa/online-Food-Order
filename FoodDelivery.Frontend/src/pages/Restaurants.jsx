@@ -7,17 +7,21 @@ function Restaurants() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:5079/api/Restaurant/all")
-      .then((response) => {
+    const fetchRestaurants = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5079/api/Restaurant/all"
+        );
+
         setRestaurants(response.data);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Error fetching restaurants:", error);
-      })
-      .finally(() => {
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchRestaurants();
   }, []);
 
   return (
@@ -33,9 +37,10 @@ function Restaurants() {
         restaurants.map((restaurant) => (
           <RestaurantCard
             key={restaurant.id}
+            id={restaurant.id}
             name={restaurant.name}
             description={restaurant.description}
-            rating="⭐ N/A"
+            rating={restaurant.rating ?? 4.5}
             location={restaurant.address}
           />
         ))

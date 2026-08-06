@@ -23,7 +23,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 
 // ======================================================
-// IDENTITY + SECURITY
+// IDENTITY
 // ======================================================
 
 builder.Services
@@ -49,7 +49,7 @@ builder.Services
 
 
 // ======================================================
-// EMAIL SETTINGS
+// EMAIL
 // ======================================================
 
 builder.Services.Configure<MailSettings>(
@@ -59,16 +59,11 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 
 
 // ======================================================
-// SSLCOMMERZ SETTINGS
+// SSLCOMMERZ
 // ======================================================
 
 builder.Services.Configure<SSLCommerzSettings>(
     builder.Configuration.GetSection("SSLCommerz"));
-
-
-// ======================================================
-// PAYMENT SERVICE
-// ======================================================
 
 builder.Services.AddHttpClient<IPaymentService, PaymentService>();
 
@@ -85,7 +80,6 @@ builder.Services.AddSignalR();
 // ======================================================
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-
 var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
 
 builder.Services
@@ -121,6 +115,22 @@ builder.Services
 // ======================================================
 
 builder.Services.AddControllers();
+
+
+// ======================================================
+// CORS
+// ======================================================
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 
 // ======================================================
@@ -179,6 +189,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowReactApp");
 
 app.UseAuthentication();
 
