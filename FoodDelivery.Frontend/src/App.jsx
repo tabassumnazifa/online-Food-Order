@@ -4,45 +4,41 @@ import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
+// Customer Pages
 import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-
 import Restaurants from "./pages/Restaurants";
 import RestaurantMenu from "./pages/RestaurantMenu";
 
-// Dashboards (create these pages if not created yet)
+// Authentication
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+
+// Restaurant Owner Pages
 import RestaurantDashboard from "./pages/RestaurantDashboard";
+import ManageFoods from "./pages/ManageFoods";
+
+// Future Pages
 // import AdminDashboard from "./pages/AdminDashboard";
 // import RiderDashboard from "./pages/RiderDashboard";
 
-
 function App() {
-
   return (
-
     <>
-
       <Navbar />
 
-
       <main className="main-content">
-
         <Routes>
 
+          {/* ========================= */}
+          {/* Customer */}
+          {/* ========================= */}
 
-          {/* Customer Pages */}
-          <Route
-            path="/"
-            element={<Home />}
-          />
-
+          <Route path="/" element={<Home />} />
 
           <Route
             path="/restaurants"
             element={<Restaurants />}
           />
-
 
           <Route
             path="/restaurant/:id"
@@ -51,12 +47,14 @@ function App() {
 
 
 
+          {/* ========================= */}
           {/* Authentication */}
+          {/* ========================= */}
+
           <Route
             path="/login"
             element={<Login />}
           />
-
 
           <Route
             path="/register"
@@ -65,22 +63,40 @@ function App() {
 
 
 
+          {/* ========================= */}
           {/* Restaurant Owner */}
+          {/* ========================= */}
+
           <Route
             path="/restaurant/dashboard"
             element={<RestaurantDashboard />}
           />
 
+          <Route
+            path="/restaurant/foods"
+            element={<ManageFoods />}
+          />
 
 
-          {/* Later add */}
-          {/* 
+
+          {/* ========================= */}
+          {/* Admin (Later) */}
+          {/* ========================= */}
+
+          {/*
           <Route
             path="/admin/dashboard"
             element={<AdminDashboard />}
           />
+          */}
 
 
+
+          {/* ========================= */}
+          {/* Rider (Later) */}
+          {/* ========================= */}
+
+          {/*
           <Route
             path="/rider/dashboard"
             element={<RiderDashboard />}
@@ -89,20 +105,23 @@ function App() {
 
 
 
+          {/* ========================= */}
+          {/* 404 Page (Optional Later) */}
+          {/* ========================= */}
+
+          {/*
+          <Route
+            path="*"
+            element={<NotFound />}
+          />
+          */}
+
         </Routes>
-
-
       </main>
 
-
       <Footer />
-
-
     </>
-
   );
-
 }
-
 
 export default App;
