@@ -13,5 +13,7 @@
         public int Quantity { get; set; }
 
         public decimal TotalPrice { get; set; }
+
+        public int RestaurantId { get; set; }
     }
 }

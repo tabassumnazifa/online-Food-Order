@@ -7,27 +7,90 @@ function RestaurantMenu() {
 
   const [foods, setFoods] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [addingFoodId, setAddingFoodId] = useState(null);
 
   useEffect(() => {
-    const fetchFoods = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:5079/api/Food/restaurant/${id}`
-        );
-
-        setFoods(response.data);
-      } catch (error) {
-        console.error("Error fetching foods:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchFoods();
   }, [id]);
 
+  const fetchFoods = async () => {
+    try {
+      setLoading(true);
+
+      const response = await axios.get(
+        `http://localhost:5079/api/Food/restaurant/${id}`
+      );
+
+      setFoods(response.data);
+    } catch (error) {
+      console.error("Error fetching foods:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddToCart = async (foodId) => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Please login first.");
+      return;
+    }
+
+    try {
+      setAddingFoodId(foodId);
+
+      const response = await axios.post(
+        "http://localhost:5079/api/Cart/add",
+        {
+          foodId: foodId,
+          quantity: 1,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("Add to cart response:", response.data);
+
+      alert("Food added to cart!");
+
+    } catch (error) {
+      console.error("Add to cart error:", error);
+
+      console.error(
+        "Status:",
+        error.response?.status
+      );
+
+      console.error(
+        "Response:",
+        error.response?.data
+      );
+
+      const data = error.response?.data;
+
+      let message = "Failed to add food to cart.";
+
+      if (typeof data === "string") {
+        message = data;
+      } else if (data?.message) {
+        message = data.message;
+      }
+
+      alert(message);
+
+    } finally {
+      setAddingFoodId(null);
+    }
+  };
+
   return (
     <div className="restaurant-menu-page">
+
       <h1>Restaurant Menu</h1>
 
       {loading ? (
@@ -36,32 +99,67 @@ function RestaurantMenu() {
         <p>No food items available.</p>
       ) : (
         <div className="food-grid">
+
           {foods.map((food) => (
-            <div className="food-card" key={food.id}>
-              <h2>{food.name}</h2>
+            <div
+              className="food-card"
+              key={food.id}
+            >
 
-              <p>{food.description}</p>
+              <h2>
+                {food.name}
+              </h2>
 
-              <h3>৳ {food.price}</h3>
+              <p>
+                {food.description}
+              </p>
+
+              <h3>
+                ৳ {food.price}
+              </h3>
 
               <p>
                 {food.isAvailable ? (
-                  <span style={{ color: "green" }}>✅ Available</span>
+                  <span
+                    style={{
+                      color: "green",
+                    }}
+                  >
+                    ✅ Available
+                  </span>
                 ) : (
-                  <span style={{ color: "red" }}>❌ Unavailable</span>
+                  <span
+                    style={{
+                      color: "red",
+                    }}
+                  >
+                    ❌ Unavailable
+                  </span>
                 )}
               </p>
 
               <button
-                disabled={!food.isAvailable}
+                type="button"
+                disabled={
+                  !food.isAvailable ||
+                  addingFoodId === food.id
+                }
                 className="add-cart-btn"
+                onClick={() =>
+                  handleAddToCart(food.id)
+                }
               >
-                Add to Cart
+                {addingFoodId === food.id
+                  ? "Adding..."
+                  : "Add to Cart"}
               </button>
+
             </div>
           ))}
+
         </div>
       )}
+
     </div>
   );
 }

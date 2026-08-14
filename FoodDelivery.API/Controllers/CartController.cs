@@ -72,36 +72,37 @@ namespace FoodDelivery.API.Controllers
             return Ok("Item added to cart successfully.");
         }
 
-        // =========================
-        // GET MY CART
-        // =========================
-        [HttpGet]
-        public async Task<IActionResult> GetMyCart()
+        
+  [HttpGet]
+public async Task<IActionResult> GetMyCart()
+{
+    var customerId =
+        User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    if (string.IsNullOrEmpty(customerId))
+    {
+        return Unauthorized();
+    }
+
+    var cartItems = await _context.CartItems
+        .Where(c => c.CustomerId == customerId)
+        .Include(c => c.Food)
+        .Select(c => new CartItemResponseDto
         {
-            // Get the logged-in customer's ID
-            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Id = c.Id,
+            FoodId = c.FoodId,
+            FoodName = c.Food!.Name,
+            Price = c.Food.Price,
+            Quantity = c.Quantity,
+            TotalPrice = c.Food.Price * c.Quantity,
 
-            if (string.IsNullOrEmpty(customerId))
-            {
-                return Unauthorized();
-            }
+            // IMPORTANT
+            RestaurantId = c.Food.RestaurantId
+        })
+        .ToListAsync();
 
-            var cartItems = await _context.CartItems
-                .Where(c => c.CustomerId == customerId)
-                .Include(c => c.Food)
-                .Select(c => new CartItemResponseDto
-                {
-                    Id = c.Id,
-                    FoodId = c.FoodId,
-                    FoodName = c.Food!.Name,
-                    Price = c.Food.Price,
-                    Quantity = c.Quantity,
-                    TotalPrice = c.Food.Price * c.Quantity
-                })
-                .ToListAsync();
-
-            return Ok(cartItems);
-        }
+    return Ok(cartItems);
+}
 
         // =========================
         // UPDATE CART ITEM QUANTITY

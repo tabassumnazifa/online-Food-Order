@@ -4,23 +4,30 @@ import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
+// =========================
 // Customer Pages
+// =========================
 import Home from "./pages/Home";
 import Restaurants from "./pages/Restaurants";
 import RestaurantMenu from "./pages/RestaurantMenu";
+import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
 
+// =========================
 // Authentication
+// =========================
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
+// =========================
 // Restaurant Owner Pages
+// =========================
 import RestaurantDashboard from "./pages/RestaurantDashboard";
 import ManageFoods from "./pages/ManageFoods";
 
-// Future Pages
-// import AdminDashboard from "./pages/AdminDashboard";
-// import RiderDashboard from "./pages/RiderDashboard";
-
+// =========================
+// App
+// =========================
 function App() {
   return (
     <>
@@ -33,7 +40,10 @@ function App() {
           {/* Customer */}
           {/* ========================= */}
 
-          <Route path="/" element={<Home />} />
+          <Route
+            path="/"
+            element={<Home />}
+          />
 
           <Route
             path="/restaurants"
@@ -45,7 +55,15 @@ function App() {
             element={<RestaurantMenu />}
           />
 
+          <Route
+            path="/cart"
+            element={<Cart />}
+          />
 
+          <Route
+            path="/checkout"
+            element={<Checkout />}
+          />
 
           {/* ========================= */}
           {/* Authentication */}
@@ -61,8 +79,6 @@ function App() {
             element={<Register />}
           />
 
-
-
           {/* ========================= */}
           {/* Restaurant Owner */}
           {/* ========================= */}
@@ -77,10 +93,8 @@ function App() {
             element={<ManageFoods />}
           />
 
-
-
           {/* ========================= */}
-          {/* Admin (Later) */}
+          {/* Future Admin */}
           {/* ========================= */}
 
           {/*
@@ -90,29 +104,14 @@ function App() {
           />
           */}
 
-
-
           {/* ========================= */}
-          {/* Rider (Later) */}
+          {/* Future Rider */}
           {/* ========================= */}
 
           {/*
           <Route
             path="/rider/dashboard"
             element={<RiderDashboard />}
-          />
-          */}
-
-
-
-          {/* ========================= */}
-          {/* 404 Page (Optional Later) */}
-          {/* ========================= */}
-
-          {/*
-          <Route
-            path="*"
-            element={<NotFound />}
           />
           */}
 
