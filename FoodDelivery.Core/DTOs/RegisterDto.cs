@@ -18,5 +18,8 @@ namespace FoodDelivery.Core.DTOs
         [Required]
         [Compare("Password")]
         public string ConfirmPassword { get; set; } = string.Empty;
+
+        [Required]
+        public string Role { get; set; } = string.Empty;
     }
 }

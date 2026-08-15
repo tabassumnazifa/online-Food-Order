@@ -8,7 +8,9 @@ function Navbar() {
 
   let role = null;
 
-  // Get role from JWT
+  // =========================
+  // GET ROLE FROM JWT
+  // =========================
   if (token) {
     try {
       const decoded = jwtDecode(token);
@@ -18,6 +20,7 @@ function Navbar() {
           "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
         ];
 
+      console.log("Logged-in user role:", role);
     } catch (error) {
       console.error("Invalid token:", error);
 
@@ -25,7 +28,9 @@ function Navbar() {
     }
   }
 
-  // Logout
+  // =========================
+  // LOGOUT
+  // =========================
   const handleLogout = () => {
     localStorage.removeItem("token");
 
@@ -37,16 +42,25 @@ function Navbar() {
   return (
     <nav className="navbar">
 
-      {/* Logo */}
+      {/* ========================= */}
+      {/* LOGO */}
+      {/* ========================= */}
+
       <h2 className="logo">
         🍔 Food Delivery
       </h2>
 
 
-      {/* Navigation */}
+      {/* ========================= */}
+      {/* NAVIGATION LINKS */}
+      {/* ========================= */}
+
       <div className="nav-links">
 
-        {/* Common Pages */}
+        {/* ========================= */}
+        {/* COMMON PAGES */}
+        {/* ========================= */}
+
         <NavLink to="/">
           Home
         </NavLink>
@@ -57,7 +71,7 @@ function Navbar() {
 
 
         {/* ========================= */}
-        {/* Guest */}
+        {/* GUEST */}
         {/* ========================= */}
 
         {!token && (
@@ -74,18 +88,24 @@ function Navbar() {
 
 
         {/* ========================= */}
-        {/* Customer */}
+        {/* CUSTOMER */}
         {/* ========================= */}
 
         {token && role === "Customer" && (
-          <NavLink to="/cart">
-            🛒 Cart
-          </NavLink>
+          <>
+            <NavLink to="/cart">
+              🛒 Cart
+            </NavLink>
+
+            <NavLink to="/orders">
+              🧾 My Orders
+            </NavLink>
+          </>
         )}
 
 
         {/* ========================= */}
-        {/* Restaurant Owner */}
+        {/* RESTAURANT OWNER */}
         {/* ========================= */}
 
         {token && role === "RestaurantOwner" && (
@@ -96,7 +116,7 @@ function Navbar() {
 
 
         {/* ========================= */}
-        {/* Admin */}
+        {/* ADMIN */}
         {/* ========================= */}
 
         {token && role === "Admin" && (
@@ -107,7 +127,7 @@ function Navbar() {
 
 
         {/* ========================= */}
-        {/* Rider */}
+        {/* RIDER */}
         {/* ========================= */}
 
         {token && role === "Rider" && (
@@ -118,7 +138,7 @@ function Navbar() {
 
 
         {/* ========================= */}
-        {/* Logout */}
+        {/* LOGOUT */}
         {/* ========================= */}
 
         {token && (

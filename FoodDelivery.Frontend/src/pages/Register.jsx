@@ -10,10 +10,14 @@ function Register() {
     email: "",
     password: "",
     confirmPassword: "",
+    role: "Customer",
   });
 
   const [loading, setLoading] = useState(false);
 
+  // =========================
+  // HANDLE INPUT CHANGE
+  // =========================
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -23,12 +27,21 @@ function Register() {
     }));
   };
 
+  // =========================
+  // REGISTER
+  // =========================
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Check password confirmation
+    // Check passwords
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match.");
+      return;
+    }
+
+    // Check role
+    if (!formData.role) {
+      alert("Please select an account type.");
       return;
     }
 
@@ -42,6 +55,7 @@ function Register() {
           email: formData.email.trim(),
           password: formData.password,
           confirmPassword: formData.confirmPassword,
+          role: formData.role,
         },
         {
           headers: {
@@ -51,17 +65,23 @@ function Register() {
         }
       );
 
-      console.log("Registration successful:", response.data);
+      console.log(
+        "Registration successful:",
+        response.data
+      );
 
       alert(
         response.data?.message ||
-          "Registration successful!"
+          "Registration successful! Please verify your email."
       );
 
       navigate("/login");
 
     } catch (error) {
-      console.error("Registration Error:", error);
+      console.error(
+        "Registration Error:",
+        error
+      );
 
       console.error(
         "Status:",
@@ -70,28 +90,25 @@ function Register() {
 
       console.error(
         "Response:",
-        JSON.stringify(
-          error.response?.data,
-          null,
-          2
-        )
+        error.response?.data
       );
 
-      // Handle ASP.NET validation errors
       const data = error.response?.data;
 
-      let message = "Registration failed. Please try again.";
+      let message =
+        "Registration failed. Please try again.";
 
       if (typeof data === "string") {
         message = data;
-      } else if (data?.message) {
+      } 
+      else if (data?.message) {
         message = data.message;
-      } else if (data?.errors) {
-        const validationErrors = Object.values(
-          data.errors
-        )
-          .flat()
-          .join("\n");
+      } 
+      else if (data?.errors) {
+        const validationErrors =
+          Object.values(data.errors)
+            .flat()
+            .join("\n");
 
         message = validationErrors;
       }
@@ -108,16 +125,25 @@ function Register() {
 
       <div className="login-card">
 
-        {/* Header */}
+        {/* ========================= */}
+        {/* HEADER */}
+        {/* ========================= */}
+
         <div className="login-header">
+
           <h1>🍔 Food Delivery</h1>
 
           <p>
             Create your account
           </p>
+
         </div>
 
-        {/* Registration Form */}
+
+        {/* ========================= */}
+        {/* REGISTRATION FORM */}
+        {/* ========================= */}
+
         <form
           onSubmit={handleSubmit}
           className="login-form"
@@ -140,6 +166,7 @@ function Register() {
             required
           />
 
+
           {/* Email */}
           <label htmlFor="email">
             Email
@@ -155,6 +182,38 @@ function Register() {
             autoComplete="email"
             required
           />
+
+
+          {/* ========================= */}
+          {/* ROLE */}
+          {/* ========================= */}
+
+          <label htmlFor="role">
+            Account Type
+          </label>
+
+          <select
+            id="role"
+            name="role"
+            value={formData.role}
+            onChange={handleChange}
+            required
+          >
+
+            <option value="Customer">
+              Customer
+            </option>
+
+            <option value="RestaurantOwner">
+              Restaurant Owner
+            </option>
+
+            <option value="DeliveryRider">
+              Delivery Rider
+            </option>
+
+          </select>
+
 
           {/* Password */}
           <label htmlFor="password">
@@ -172,6 +231,7 @@ function Register() {
             required
           />
 
+
           {/* Confirm Password */}
           <label htmlFor="confirmPassword">
             Confirm Password
@@ -188,6 +248,7 @@ function Register() {
             required
           />
 
+
           {/* Register Button */}
           <button
             type="submit"
@@ -200,7 +261,11 @@ function Register() {
 
         </form>
 
-        {/* Login Link */}
+
+        {/* ========================= */}
+        {/* LOGIN LINK */}
+        {/* ========================= */}
+
         <div className="login-footer">
 
           <p>

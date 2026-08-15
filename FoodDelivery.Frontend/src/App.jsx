@@ -12,6 +12,9 @@ import Restaurants from "./pages/Restaurants";
 import RestaurantMenu from "./pages/RestaurantMenu";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
+import Orders from "./pages/Orders";
+import CreateRestaurant from "./pages/CreateRestaurant";
+import RestaurantOrders from "./pages/RestaurantOrders";
 
 // =========================
 // Authentication
@@ -37,7 +40,7 @@ function App() {
         <Routes>
 
           {/* ========================= */}
-          {/* Customer */}
+          {/* Customer Pages */}
           {/* ========================= */}
 
           <Route
@@ -65,6 +68,12 @@ function App() {
             element={<Checkout />}
           />
 
+          <Route
+            path="/orders"
+            element={<Orders />}
+          />
+
+
           {/* ========================= */}
           {/* Authentication */}
           {/* ========================= */}
@@ -78,6 +87,12 @@ function App() {
             path="/register"
             element={<Register />}
           />
+
+          <Route
+             path="/restaurant/orders"
+             element={<RestaurantOrders />}
+          />
+
 
           {/* ========================= */}
           {/* Restaurant Owner */}
@@ -93,6 +108,17 @@ function App() {
             element={<ManageFoods />}
           />
 
+          <Route
+             path="/restaurant/orders"
+             element={<RestaurantOrders />}
+          />
+
+          <Route
+            path="/restaurant/create"
+            element={<CreateRestaurant />}
+          />
+
+
           {/* ========================= */}
           {/* Future Admin */}
           {/* ========================= */}
@@ -103,6 +129,7 @@ function App() {
             element={<AdminDashboard />}
           />
           */}
+
 
           {/* ========================= */}
           {/* Future Rider */}

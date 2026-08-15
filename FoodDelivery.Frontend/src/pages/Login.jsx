@@ -3,247 +3,254 @@ import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 
-
 function Login() {
-
   const navigate = useNavigate();
-
 
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
-
   const [loading, setLoading] = useState(false);
 
-
+  // =========================
+  // HANDLE INPUT
+  // =========================
 
   const handleChange = (e) => {
-
-    setFormData({
-      ...formData,
+    setFormData((previous) => ({
+      ...previous,
       [e.target.name]: e.target.value,
-    });
-
+    }));
   };
 
-
+  // =========================
+  // LOGIN
+  // =========================
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
 
     setLoading(true);
 
-
     try {
-
       const response = await axios.post(
         "http://localhost:5079/api/Auth/login",
-        formData
+        {
+          email: formData.email.trim(),
+          password: formData.password,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "*/*",
+          },
+        }
       );
 
+      console.log("Login response:", response.data);
 
       const token = response.data.token;
 
+      if (!token) {
+        alert("Login failed: token was not received.");
+        return;
+      }
 
-      // save token
-      localStorage.setItem(
-        "token",
-        token
-      );
+      // =========================
+      // SAVE TOKEN
+      // =========================
 
+      localStorage.setItem("token", token);
 
-      // decode JWT
+      // =========================
+      // DECODE JWT
+      // =========================
+
       const decoded = jwtDecode(token);
 
+      console.log("Decoded JWT:", decoded);
 
-      console.log(decoded);
+      // ASP.NET Core Role claim
+      const roleClaim =
+        decoded[
+          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        ];
 
-
+      // Backend also returns role directly
       const role =
-        decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+        response.data.role || roleClaim;
 
+      console.log("Logged in role:", role);
 
+      if (!role) {
+        alert(
+          "Login successful, but no role was found for this account."
+        );
 
-      alert(`Welcome ${role}!`);
+        localStorage.removeItem("token");
+        return;
+      }
 
+      // =========================
+      // ROLE-BASED REDIRECTION
+      // =========================
 
-
-      // redirect based on role
-
-      if(role === "Admin")
-      {
+      if (role === "Admin") {
         navigate("/admin/dashboard");
       }
 
-      else if(role === "RestaurantOwner")
-      {
+      else if (role === "RestaurantOwner") {
         navigate("/restaurant/dashboard");
       }
 
-      else if(role === "Rider")
-      {
+      else if (role === "DeliveryRider") {
         navigate("/rider/dashboard");
       }
 
-      else
-      {
+      else if (role === "Customer") {
         navigate("/");
       }
 
+      else {
+        alert(`Unknown role: ${role}`);
+        navigate("/");
+      }
 
-
-    } 
-    catch(error)
-    {
+    } catch (error) {
+      console.error("Login Error:", error);
 
       console.error(
-        "Login Error:",
-        error
+        "Status:",
+        error.response?.status
       );
 
-
-      alert(
-        error.response?.data ||
-        "Invalid email or password."
+      console.error(
+        "Response:",
+        error.response?.data
       );
 
-    }
+      let message =
+        "Invalid email or password.";
 
+      if (typeof error.response?.data === "string") {
+        message = error.response.data;
+      }
 
-    finally
-    {
+      else if (error.response?.data?.message) {
+        message =
+          error.response.data.message;
+      }
+
+      alert(message);
+
+    } finally {
       setLoading(false);
     }
-
   };
 
+  return (
+    <div className="login-page">
+
+      <div className="login-card">
+
+        {/* ========================= */}
+        {/* HEADER */}
+        {/* ========================= */}
+
+        <div className="login-header">
+
+          <h1>
+            🍔 Food Delivery
+          </h1>
+
+          <p>
+            Login to your account
+          </p>
+
+        </div>
 
 
-return (
+        {/* ========================= */}
+        {/* LOGIN FORM */}
+        {/* ========================= */}
 
-<div className="login-page">
+        <form
+          onSubmit={handleSubmit}
+          className="login-form"
+          autoComplete="off"
+        >
 
+          {/* Email */}
 
-<div className="login-card">
+          <label htmlFor="email">
+            Email
+          </label>
 
-
-<div className="login-header">
-
-<h1>
-🍔 Food Delivery
-</h1>
-
-<p>
-Login to your account
-</p>
-
-</div>
-
-
-
-<form
-onSubmit={handleSubmit}
-className="login-form"
-autoComplete="off"
->
-
-
-<label>
-Email
-</label>
+          <input
+            id="email"
+            type="email"
+            name="email"
+            placeholder="Enter your email"
+            value={formData.email}
+            onChange={handleChange}
+            autoComplete="email"
+            required
+          />
 
 
-<input
+          {/* Password */}
 
-type="email"
+          <label htmlFor="password">
+            Password
+          </label>
 
-name="email"
-
-placeholder="Enter your email"
-
-value={formData.email}
-
-onChange={handleChange}
-
-required
-
-/>
-
-
-
-
-<label>
-Password
-</label>
+          <input
+            id="password"
+            type="password"
+            name="password"
+            placeholder="Enter your password"
+            value={formData.password}
+            onChange={handleChange}
+            autoComplete="current-password"
+            required
+          />
 
 
-<input
+          {/* Login Button */}
 
-type="password"
+          <button
+            type="submit"
+            disabled={loading}
+          >
+            {loading
+              ? "Logging in..."
+              : "Login"}
+          </button>
 
-name="password"
-
-placeholder="Enter your password"
-
-value={formData.password}
-
-onChange={handleChange}
-
-required
-
-/>
+        </form>
 
 
+        {/* ========================= */}
+        {/* REGISTER LINK */}
+        {/* ========================= */}
 
+        <div className="login-footer">
 
-<button
-type="submit"
-disabled={loading}
->
+          <p>
+            Don't have an account?{" "}
 
-{
-loading
-?
-"Logging in..."
-:
-"Login"
+            <Link to="/register">
+              Create Account
+            </Link>
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+  );
 }
-
-</button>
-
-
-</form>
-
-
-
-<div className="login-footer">
-
-<p>
-
-Don't have an account?
-
-<Link to="/register">
-{" "}Create Account
-</Link>
-
-</p>
-
-</div>
-
-
-
-</div>
-
-
-</div>
-
-);
-
-
-}
-
 
 export default Login;
