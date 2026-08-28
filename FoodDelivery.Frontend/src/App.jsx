@@ -1,4 +1,6 @@
+
 import "./App.css";
+
 import { Routes, Route } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
@@ -7,30 +9,40 @@ import Footer from "./components/Footer";
 // =========================
 // Customer Pages
 // =========================
+
 import Home from "./pages/Home";
 import Restaurants from "./pages/Restaurants";
 import RestaurantMenu from "./pages/RestaurantMenu";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
-import CreateRestaurant from "./pages/CreateRestaurant";
-import RestaurantOrders from "./pages/RestaurantOrders";
 
 // =========================
 // Authentication
 // =========================
+
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
 // =========================
 // Restaurant Owner Pages
 // =========================
+
+import CreateRestaurant from "./pages/CreateRestaurant";
 import RestaurantDashboard from "./pages/RestaurantDashboard";
 import ManageFoods from "./pages/ManageFoods";
+import RestaurantOrders from "./pages/RestaurantOrders";
+
+// =========================
+// Rider Pages
+// =========================
+
+import RiderDashboard from "./pages/RiderDashboard";
 
 // =========================
 // App
 // =========================
+
 function App() {
   return (
     <>
@@ -88,15 +100,15 @@ function App() {
             element={<Register />}
           />
 
-          <Route
-             path="/restaurant/orders"
-             element={<RestaurantOrders />}
-          />
-
 
           {/* ========================= */}
           {/* Restaurant Owner */}
           {/* ========================= */}
+
+          <Route
+            path="/restaurant/create"
+            element={<CreateRestaurant />}
+          />
 
           <Route
             path="/restaurant/dashboard"
@@ -109,38 +121,19 @@ function App() {
           />
 
           <Route
-             path="/restaurant/orders"
-             element={<RestaurantOrders />}
-          />
-
-          <Route
-            path="/restaurant/create"
-            element={<CreateRestaurant />}
+            path="/restaurant/orders"
+            element={<RestaurantOrders />}
           />
 
 
           {/* ========================= */}
-          {/* Future Admin */}
+          {/* Rider */}
           {/* ========================= */}
 
-          {/*
-          <Route
-            path="/admin/dashboard"
-            element={<AdminDashboard />}
-          />
-          */}
-
-
-          {/* ========================= */}
-          {/* Future Rider */}
-          {/* ========================= */}
-
-          {/*
           <Route
             path="/rider/dashboard"
             element={<RiderDashboard />}
           />
-          */}
 
         </Routes>
       </main>
@@ -151,3 +144,4 @@ function App() {
 }
 
 export default App;
+
