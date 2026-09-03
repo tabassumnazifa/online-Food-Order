@@ -1,4 +1,3 @@
-
 import "./App.css";
 
 import { Routes, Route } from "react-router-dom";
@@ -16,6 +15,8 @@ import RestaurantMenu from "./pages/RestaurantMenu";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
+import Feedback from "./pages/Feedback";
+import Offers from "./pages/Offers";
 
 // =========================
 // Authentication
@@ -32,6 +33,7 @@ import CreateRestaurant from "./pages/CreateRestaurant";
 import RestaurantDashboard from "./pages/RestaurantDashboard";
 import ManageFoods from "./pages/ManageFoods";
 import RestaurantOrders from "./pages/RestaurantOrders";
+import CreateOffer from "./pages/CreateOffer";
 
 // =========================
 // Rider Pages
@@ -51,9 +53,9 @@ function App() {
       <main className="main-content">
         <Routes>
 
-          {/* ========================= */}
-          {/* Customer Pages */}
-          {/* ========================= */}
+          {/* =========================
+              Customer Pages
+          ========================= */}
 
           <Route
             path="/"
@@ -85,10 +87,19 @@ function App() {
             element={<Orders />}
           />
 
+          <Route
+            path="/feedback"
+            element={<Feedback />}
+          />
 
-          {/* ========================= */}
-          {/* Authentication */}
-          {/* ========================= */}
+          <Route
+            path="/offers"
+            element={<Offers />}
+          />
+
+          {/* =========================
+              Authentication
+          ========================= */}
 
           <Route
             path="/login"
@@ -100,10 +111,9 @@ function App() {
             element={<Register />}
           />
 
-
-          {/* ========================= */}
-          {/* Restaurant Owner */}
-          {/* ========================= */}
+          {/* =========================
+              Restaurant Owner
+          ========================= */}
 
           <Route
             path="/restaurant/create"
@@ -125,10 +135,14 @@ function App() {
             element={<RestaurantOrders />}
           />
 
+          <Route
+            path="/restaurant/offers/create"
+            element={<CreateOffer />}
+          />
 
-          {/* ========================= */}
-          {/* Rider */}
-          {/* ========================= */}
+          {/* =========================
+              Rider
+          ========================= */}
 
           <Route
             path="/rider/dashboard"
@@ -144,4 +158,3 @@ function App() {
 }
 
 export default App;
-

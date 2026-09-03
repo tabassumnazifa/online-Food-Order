@@ -23,7 +23,6 @@ function Navbar() {
       console.log("Logged-in user role:", role);
     } catch (error) {
       console.error("Invalid token:", error);
-
       localStorage.removeItem("token");
     }
   }
@@ -33,34 +32,28 @@ function Navbar() {
   // =========================
   const handleLogout = () => {
     localStorage.removeItem("token");
-
     navigate("/");
-
     window.location.reload();
   };
 
   return (
     <nav className="navbar">
 
-      {/* ========================= */}
-      {/* LOGO */}
-      {/* ========================= */}
-
+      {/* =========================
+          LOGO
+      ========================= */}
       <h2 className="logo">
         🍔 Food Delivery
       </h2>
 
-
-      {/* ========================= */}
-      {/* NAVIGATION LINKS */}
-      {/* ========================= */}
-
+      {/* =========================
+          NAVIGATION LINKS
+      ========================= */}
       <div className="nav-links">
 
-        {/* ========================= */}
-        {/* COMMON PAGES */}
-        {/* ========================= */}
-
+        {/* =========================
+            COMMON PAGES
+        ========================= */}
         <NavLink to="/">
           Home
         </NavLink>
@@ -69,11 +62,9 @@ function Navbar() {
           Restaurants
         </NavLink>
 
-
-        {/* ========================= */}
-        {/* GUEST */}
-        {/* ========================= */}
-
+        {/* =========================
+            GUEST
+        ========================= */}
         {!token && (
           <>
             <NavLink to="/login">
@@ -86,11 +77,9 @@ function Navbar() {
           </>
         )}
 
-
-        {/* ========================= */}
-        {/* CUSTOMER */}
-        {/* ========================= */}
-
+        {/* =========================
+            CUSTOMER
+        ========================= */}
         {token && role === "Customer" && (
           <>
             <NavLink to="/cart">
@@ -100,47 +89,47 @@ function Navbar() {
             <NavLink to="/orders">
               🧾 My Orders
             </NavLink>
+
+            <NavLink to="/feedback">
+              ⭐ Feedback
+            </NavLink>
+
+            <NavLink to="/offers">
+              🎁 Offers
+            </NavLink>
           </>
         )}
 
-
-        {/* ========================= */}
-        {/* RESTAURANT OWNER */}
-        {/* ========================= */}
-
+        {/* =========================
+            RESTAURANT OWNER
+        ========================= */}
         {token && role === "RestaurantOwner" && (
           <NavLink to="/restaurant/dashboard">
             Dashboard
           </NavLink>
         )}
 
-
-        {/* ========================= */}
-        {/* ADMIN */}
-        {/* ========================= */}
-
+        {/* =========================
+            ADMIN
+        ========================= */}
         {token && role === "Admin" && (
           <NavLink to="/admin/dashboard">
             Admin
           </NavLink>
         )}
 
-
-        {/* ========================= */}
-        {/* RIDER */}
-        {/* ========================= */}
-
+        {/* =========================
+            RIDER
+        ========================= */}
         {token && role === "Rider" && (
           <NavLink to="/rider/dashboard">
             Rider
           </NavLink>
         )}
 
-
-        {/* ========================= */}
-        {/* LOGOUT */}
-        {/* ========================= */}
-
+        {/* =========================
+            LOGOUT
+        ========================= */}
         {token && (
           <button
             type="button"
@@ -152,9 +141,9 @@ function Navbar() {
         )}
 
       </div>
-
     </nav>
   );
 }
 
 export default Navbar;
+
