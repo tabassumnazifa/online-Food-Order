@@ -1,4 +1,3 @@
-
 import "./App.css";
 
 import { Routes, Route } from "react-router-dom";
@@ -41,12 +40,17 @@ import CreateOffer from "./pages/CreateOffer";
 // =========================
 
 import RiderDashboard from "./pages/RiderDashboard";
+import AvailableOrders from "./pages/AvailableOrders";
 
 // =========================
 // Admin Pages
 // =========================
 
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminRestaurants from "./pages/AdminRestaurants";
+import AdminUsers from "./pages/AdminUsers";
+import AdminOrders from "./pages/AdminOrders";
+import AdminOffers from "./pages/AdminOffers";
 
 // =========================
 // App
@@ -156,6 +160,11 @@ function App() {
             element={<RiderDashboard />}
           />
 
+          <Route
+            path="/rider/available-orders"
+            element={<AvailableOrders />}
+          />
+
           {/* =========================
               Super Admin
           ========================= */}
@@ -163,6 +172,26 @@ function App() {
           <Route
             path="/admin/dashboard"
             element={<AdminDashboard />}
+          />
+
+          <Route
+            path="/admin/restaurants"
+            element={<AdminRestaurants />}
+          />
+
+          <Route
+            path="/admin/users"
+            element={<AdminUsers />}
+          />
+
+          <Route
+            path="/admin/orders"
+            element={<AdminOrders />}
+          />
+
+          <Route
+            path="/admin/offers"
+            element={<AdminOffers />}
           />
 
         </Routes>
@@ -174,4 +203,3 @@ function App() {
 }
 
 export default App;
-

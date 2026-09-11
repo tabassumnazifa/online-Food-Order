@@ -1,3 +1,4 @@
+
 using FoodDelivery.Core.DTOs;
 using FoodDelivery.Core.Enums;
 using FoodDelivery.Core.Models;
@@ -16,7 +17,6 @@ namespace FoodDelivery.API.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
 
-
         public OfferController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager)
@@ -24,8 +24,6 @@ namespace FoodDelivery.API.Controllers
             _context = context;
             _userManager = userManager;
         }
-
-
 
         // =====================================
         // CREATE RESTAURANT OFFER
@@ -37,22 +35,18 @@ namespace FoodDelivery.API.Controllers
         {
             var userId = _userManager.GetUserId(User);
 
-
             var restaurant = await _context.Restaurants
                 .FirstOrDefaultAsync(r => r.OwnerId == userId);
-
 
             if (restaurant == null)
             {
                 return BadRequest("Restaurant not found.");
             }
 
-
             if (dto.EndDate <= dto.StartDate)
             {
                 return BadRequest("Invalid offer duration.");
             }
-
 
             var offer = new Offer
             {
@@ -67,11 +61,9 @@ namespace FoodDelivery.API.Controllers
                 IsActive = true
             };
 
-
             _context.Offers.Add(offer);
 
             await _context.SaveChangesAsync();
-
 
             return Ok(new
             {
@@ -80,10 +72,8 @@ namespace FoodDelivery.API.Controllers
             });
         }
 
-
-
         // =====================================
-        // GET ACTIVE OFFERS (CUSTOMER)
+        // GET ACTIVE OFFERS - CUSTOMER
         // =====================================
 
         [HttpGet("active")]
@@ -91,7 +81,6 @@ namespace FoodDelivery.API.Controllers
         public async Task<IActionResult> GetActiveOffers()
         {
             var today = DateTime.UtcNow;
-
 
             var offers = await _context.Offers
                 .Include(o => o.Restaurant)
@@ -117,14 +106,11 @@ namespace FoodDelivery.API.Controllers
                 })
                 .ToListAsync();
 
-
             return Ok(offers);
         }
 
-
-
         // =====================================
-        // UPDATE OWNER OFFER
+        // UPDATE RESTAURANT OWNER OFFER
         // =====================================
 
         [HttpPut("update/{id}")]
@@ -135,19 +121,22 @@ namespace FoodDelivery.API.Controllers
         {
             var userId = _userManager.GetUserId(User);
 
-
             var offer = await _context.Offers
                 .Include(o => o.Restaurant)
                 .FirstOrDefaultAsync(o =>
                     o.Id == id &&
-                    o.Restaurant!.OwnerId == userId);
-
+                    o.Restaurant != null &&
+                    o.Restaurant.OwnerId == userId);
 
             if (offer == null)
             {
                 return NotFound("Offer not found.");
             }
 
+            if (dto.EndDate <= dto.StartDate)
+            {
+                return BadRequest("Invalid offer duration.");
+            }
 
             offer.Title = dto.Title;
             offer.Description = dto.Description;
@@ -158,9 +147,7 @@ namespace FoodDelivery.API.Controllers
             offer.EndDate = dto.EndDate;
             offer.IsActive = dto.IsActive;
 
-
             await _context.SaveChangesAsync();
-
 
             return Ok(new
             {
@@ -168,10 +155,8 @@ namespace FoodDelivery.API.Controllers
             });
         }
 
-
-
         // =====================================
-        // DELETE OWNER OFFER
+        // DELETE RESTAURANT OWNER OFFER
         // =====================================
 
         [HttpDelete("delete/{id}")]
@@ -180,32 +165,27 @@ namespace FoodDelivery.API.Controllers
         {
             var userId = _userManager.GetUserId(User);
 
-
             var offer = await _context.Offers
                 .Include(o => o.Restaurant)
                 .FirstOrDefaultAsync(o =>
                     o.Id == id &&
-                    o.Restaurant!.OwnerId == userId);
-
+                    o.Restaurant != null &&
+                    o.Restaurant.OwnerId == userId);
 
             if (offer == null)
             {
                 return NotFound("Offer not found.");
             }
 
-
             _context.Offers.Remove(offer);
 
             await _context.SaveChangesAsync();
-
 
             return Ok(new
             {
                 Message = "Offer deleted successfully."
             });
         }
-
-
 
         // =====================================
         // ADMIN GET ALL OFFERS
@@ -217,6 +197,7 @@ namespace FoodDelivery.API.Controllers
         {
             var offers = await _context.Offers
                 .Include(o => o.Restaurant)
+                .OrderByDescending(o => o.StartDate)
                 .Select(o => new OfferDto
                 {
                     Id = o.Id,
@@ -235,11 +216,48 @@ namespace FoodDelivery.API.Controllers
                 })
                 .ToListAsync();
 
-
             return Ok(offers);
         }
 
+        // =====================================
+        // ADMIN CREATE PLATFORM OFFER
+        // =====================================
 
+        [HttpPost("admin/create")]
+        [Authorize(Roles = Roles.Admin)]
+        public async Task<IActionResult> AdminCreateOffer(CreateOfferDto dto)
+        {
+            if (dto.EndDate <= dto.StartDate)
+            {
+                return BadRequest("Invalid offer duration.");
+            }
+
+            var offer = new Offer
+            {
+                Title = dto.Title,
+                Description = dto.Description,
+                CouponCode = dto.CouponCode,
+                DiscountPercentage = dto.DiscountPercentage,
+                MaximumDiscount = dto.MaximumDiscount,
+                StartDate = dto.StartDate,
+                EndDate = dto.EndDate,
+
+                // NULL means this is a system-wide platform offer.
+                RestaurantId = null,
+
+                IsActive = true
+            };
+
+            _context.Offers.Add(offer);
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                Message = "Platform offer created successfully.",
+                OfferId = offer.Id
+            });
+        }
 
         // =====================================
         // ADMIN DELETE OFFER
@@ -252,17 +270,14 @@ namespace FoodDelivery.API.Controllers
             var offer = await _context.Offers
                 .FirstOrDefaultAsync(o => o.Id == id);
 
-
             if (offer == null)
             {
                 return NotFound("Offer not found.");
             }
 
-
             _context.Offers.Remove(offer);
 
             await _context.SaveChangesAsync();
-
 
             return Ok(new
             {
