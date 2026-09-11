@@ -1,4 +1,5 @@
-﻿using FoodDelivery.Core.DTOs;
+﻿
+using FoodDelivery.Core.DTOs;
 using FoodDelivery.Core.Enums;
 using FoodDelivery.Core.Models;
 using FoodDelivery.Infrastructure.Services;
@@ -29,6 +30,7 @@ namespace FoodDelivery.API.Controllers
             _emailService = emailService;
         }
 
+
         // =====================================================
         // REGISTER
         // =====================================================
@@ -36,7 +38,6 @@ namespace FoodDelivery.API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto model)
         {
-            // Check whether email already exists
             var existingUser =
                 await _userManager.FindByEmailAsync(model.Email);
 
@@ -45,8 +46,6 @@ namespace FoodDelivery.API.Controllers
                 return BadRequest("Email is already registered.");
             }
 
-            // Only these roles can be selected during registration.
-            // Admin is NOT allowed to register from the frontend.
             var allowedRoles = new[]
             {
                 Roles.Customer,
@@ -59,13 +58,14 @@ namespace FoodDelivery.API.Controllers
                 return BadRequest("Invalid role selected.");
             }
 
-            // Create user
             var user = new ApplicationUser
             {
                 FullName = model.FullName,
                 Email = model.Email,
                 UserName = model.Email,
-                EmailConfirmed = false
+                EmailConfirmed = false,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
             };
 
             var result = await _userManager.CreateAsync(
@@ -78,7 +78,6 @@ namespace FoodDelivery.API.Controllers
                 return BadRequest(result.Errors);
             }
 
-            // Assign selected role
             var roleResult = await _userManager.AddToRoleAsync(
                 user,
                 model.Role
@@ -86,11 +85,11 @@ namespace FoodDelivery.API.Controllers
 
             if (!roleResult.Succeeded)
             {
-                // Remove user if role assignment fails
                 await _userManager.DeleteAsync(user);
 
                 return BadRequest(roleResult.Errors);
             }
+
 
             // =================================================
             // EMAIL VERIFICATION
@@ -148,11 +147,21 @@ If you did not create this account, please ignore this email.
 </html>
 ";
 
-            await _emailService.SendEmailAsync(
-                user.Email!,
-                "Verify Your Food Delivery Account",
-                emailBody
-            );
+            try
+            {
+                await _emailService.SendEmailAsync(
+                    user.Email!,
+                    "Verify Your Food Delivery Account",
+                    emailBody
+                );
+            }
+            catch
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    "Account was created, but the verification email could not be sent. Please try again later."
+                );
+            }
 
             return Ok(new
             {
@@ -160,6 +169,7 @@ If you did not create this account, please ignore this email.
                     $"Registration successful as {model.Role}. Please verify your email."
             });
         }
+
 
         // =====================================================
         // LOGIN
@@ -176,7 +186,23 @@ If you did not create this account, please ignore this email.
                 return Unauthorized("Invalid email or password.");
             }
 
-            // Check password
+
+            // =================================================
+            // ACCOUNT STATUS
+            // =================================================
+
+            if (!user.IsActive)
+            {
+                return Unauthorized(
+                    "Your account has been blocked by the administrator."
+                );
+            }
+
+
+            // =================================================
+            // PASSWORD
+            // =================================================
+
             var passwordValid =
                 await _userManager.CheckPasswordAsync(
                     user,
@@ -188,7 +214,11 @@ If you did not create this account, please ignore this email.
                 return Unauthorized("Invalid email or password.");
             }
 
-            // Check email verification
+
+            // =================================================
+            // EMAIL VERIFICATION
+            // =================================================
+
             if (!user.EmailConfirmed)
             {
                 return Unauthorized(
@@ -196,7 +226,11 @@ If you did not create this account, please ignore this email.
                 );
             }
 
-            // Get user's roles
+
+            // =================================================
+            // USER ROLES
+            // =================================================
+
             var roles =
                 await _userManager.GetRolesAsync(user);
 
@@ -207,13 +241,27 @@ If you did not create this account, please ignore this email.
                 );
             }
 
+
+            // =================================================
+            // JWT SETTINGS
+            // =================================================
+
             var jwtSettings =
                 _configuration.GetSection("Jwt");
 
-            var key =
-                Encoding.UTF8.GetBytes(
-                    jwtSettings["Key"]!
+            var jwtKey = jwtSettings["Key"];
+
+            if (string.IsNullOrWhiteSpace(jwtKey))
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    "JWT configuration is missing."
                 );
+            }
+
+            var key =
+                Encoding.UTF8.GetBytes(jwtKey);
+
 
             // =================================================
             // JWT CLAIMS
@@ -228,7 +276,7 @@ If you did not create this account, please ignore this email.
 
                 new Claim(
                     ClaimTypes.Email,
-                    user.Email!
+                    user.Email ?? string.Empty
                 ),
 
                 new Claim(
@@ -237,7 +285,6 @@ If you did not create this account, please ignore this email.
                 )
             };
 
-            // Add roles to JWT
             foreach (var role in roles)
             {
                 claims.Add(
@@ -248,9 +295,20 @@ If you did not create this account, please ignore this email.
                 );
             }
 
+
             // =================================================
             // CREATE JWT
             // =================================================
+
+            var durationSetting =
+                jwtSettings["DurationInMinutes"];
+
+            if (!double.TryParse(
+                    durationSetting,
+                    out var durationInMinutes))
+            {
+                durationInMinutes = 60;
+            }
 
             var token =
                 new JwtSecurityToken(
@@ -259,9 +317,7 @@ If you did not create this account, please ignore this email.
                     claims: claims,
                     expires:
                         DateTime.Now.AddMinutes(
-                            Convert.ToDouble(
-                                jwtSettings["DurationInMinutes"]
-                            )
+                            durationInMinutes
                         ),
                     signingCredentials:
                         new SigningCredentials(
@@ -280,6 +336,7 @@ If you did not create this account, please ignore this email.
                 role = roles.FirstOrDefault()
             });
         }
+
 
         // =====================================================
         // CONFIRM EMAIL
@@ -321,6 +378,7 @@ If you did not create this account, please ignore this email.
             });
         }
 
+
         // =====================================================
         // FORGOT PASSWORD
         // =====================================================
@@ -337,6 +395,13 @@ If you did not create this account, please ignore this email.
             if (user == null)
             {
                 return BadRequest("Email not found.");
+            }
+
+            if (!user.IsActive)
+            {
+                return BadRequest(
+                    "This account has been blocked by the administrator."
+                );
             }
 
             var resetToken =
@@ -401,6 +466,7 @@ If you did not request this, please ignore this email.
             });
         }
 
+
         // =====================================================
         // RESET PASSWORD
         // =====================================================
@@ -417,6 +483,13 @@ If you did not request this, please ignore this email.
             if (user == null)
             {
                 return BadRequest("Invalid email.");
+            }
+
+            if (!user.IsActive)
+            {
+                return BadRequest(
+                    "This account has been blocked by the administrator."
+                );
             }
 
             var decodedToken =

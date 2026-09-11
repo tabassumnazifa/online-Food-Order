@@ -9,7 +9,6 @@ namespace FoodDelivery.Core.Models
         public int Id { get; set; }
 
 
-
         // =========================
         // RESTAURANT INFORMATION
         // =========================
@@ -34,6 +33,16 @@ namespace FoodDelivery.Core.Models
         public string? ImageUrl { get; set; }
 
 
+        // =========================
+        // RESTAURANT SUSPENSION
+        // =========================
+
+        public bool IsSuspended { get; set; } = false;
+
+        public string? SuspensionReason { get; set; }
+
+        public DateTime? SuspendedAt { get; set; }
+
 
         // =========================
         // RESTAURANT OWNER
@@ -47,14 +56,12 @@ namespace FoodDelivery.Core.Models
         public ApplicationUser? Owner { get; set; }
 
 
-
         // =========================
         // FOODS
         // =========================
 
         public ICollection<Food> Foods { get; set; }
             = new List<Food>();
-
 
 
         // =========================
@@ -65,14 +72,12 @@ namespace FoodDelivery.Core.Models
             = new List<Order>();
 
 
-
         // =========================
         // FEEDBACKS
         // =========================
 
         public ICollection<Feedback> Feedbacks { get; set; }
             = new List<Feedback>();
-
 
 
         // =========================

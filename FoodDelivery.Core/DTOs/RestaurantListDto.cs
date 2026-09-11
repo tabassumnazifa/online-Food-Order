@@ -13,5 +13,11 @@ namespace FoodDelivery.Core.DTOs
         public int TotalFoods { get; set; }
 
         public double AverageRating { get; set; }
+
+        public bool IsSuspended { get; set; }
+
+        public string? SuspensionReason { get; set; }
+
+        public DateTime? SuspendedAt { get; set; }
     }
 }
