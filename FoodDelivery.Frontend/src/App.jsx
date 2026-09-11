@@ -17,6 +17,7 @@ import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import Feedback from "./pages/Feedback";
 import Offers from "./pages/Offers";
+import PaymentResult from "./pages/PaymentResult";
 
 // =========================
 // Authentication
@@ -57,149 +58,170 @@ import AdminOffers from "./pages/AdminOffers";
 // =========================
 
 function App() {
-  return (
-    <>
-      <Navbar />
+return (
+<> <Navbar />
 
-      <main className="main-content">
-        <Routes>
+```
+  <main className="main-content">
+    <Routes>
 
-          {/* =========================
-              Customer Pages
-          ========================= */}
+      {/* =========================
+          Customer Pages
+      ========================= */}
 
-          <Route
-            path="/"
-            element={<Home />}
-          />
+      <Route
+        path="/"
+        element={<Home />}
+      />
 
-          <Route
-            path="/restaurants"
-            element={<Restaurants />}
-          />
+      <Route
+        path="/restaurants"
+        element={<Restaurants />}
+      />
 
-          <Route
-            path="/restaurant/:id"
-            element={<RestaurantMenu />}
-          />
+      <Route
+        path="/restaurant/:id"
+        element={<RestaurantMenu />}
+      />
 
-          <Route
-            path="/cart"
-            element={<Cart />}
-          />
+      <Route
+        path="/cart"
+        element={<Cart />}
+      />
 
-          <Route
-            path="/checkout"
-            element={<Checkout />}
-          />
+      <Route
+        path="/checkout"
+        element={<Checkout />}
+      />
 
-          <Route
-            path="/orders"
-            element={<Orders />}
-          />
+      <Route
+        path="/orders"
+        element={<Orders />}
+      />
 
-          <Route
-            path="/feedback"
-            element={<Feedback />}
-          />
+      <Route
+        path="/feedback"
+        element={<Feedback />}
+      />
 
-          <Route
-            path="/offers"
-            element={<Offers />}
-          />
+      <Route
+        path="/offers"
+        element={<Offers />}
+      />
 
-          {/* =========================
-              Authentication
-          ========================= */}
+      {/* =========================
+          Payment Result
+      ========================= */}
 
-          <Route
-            path="/login"
-            element={<Login />}
-          />
+      <Route
+        path="/payment/success"
+        element={<PaymentResult />}
+      />
 
-          <Route
-            path="/register"
-            element={<Register />}
-          />
+      <Route
+        path="/payment/fail"
+        element={<PaymentResult />}
+      />
 
-          {/* =========================
-              Restaurant Owner
-          ========================= */}
+      <Route
+        path="/payment/cancel"
+        element={<PaymentResult />}
+      />
 
-          <Route
-            path="/restaurant/create"
-            element={<CreateRestaurant />}
-          />
+      {/* =========================
+          Authentication
+      ========================= */}
 
-          <Route
-            path="/restaurant/dashboard"
-            element={<RestaurantDashboard />}
-          />
+      <Route
+        path="/login"
+        element={<Login />}
+      />
 
-          <Route
-            path="/restaurant/foods"
-            element={<ManageFoods />}
-          />
+      <Route
+        path="/register"
+        element={<Register />}
+      />
 
-          <Route
-            path="/restaurant/orders"
-            element={<RestaurantOrders />}
-          />
+      {/* =========================
+          Restaurant Owner
+      ========================= */}
 
-          <Route
-            path="/restaurant/offers/create"
-            element={<CreateOffer />}
-          />
+      <Route
+        path="/restaurant/create"
+        element={<CreateRestaurant />}
+      />
 
-          {/* =========================
-              Rider
-          ========================= */}
+      <Route
+        path="/restaurant/dashboard"
+        element={<RestaurantDashboard />}
+      />
 
-          <Route
-            path="/rider/dashboard"
-            element={<RiderDashboard />}
-          />
+      <Route
+        path="/restaurant/foods"
+        element={<ManageFoods />}
+      />
 
-          <Route
-            path="/rider/available-orders"
-            element={<AvailableOrders />}
-          />
+      <Route
+        path="/restaurant/orders"
+        element={<RestaurantOrders />}
+      />
 
-          {/* =========================
-              Super Admin
-          ========================= */}
+      <Route
+        path="/restaurant/offers/create"
+        element={<CreateOffer />}
+      />
 
-          <Route
-            path="/admin/dashboard"
-            element={<AdminDashboard />}
-          />
+      {/* =========================
+          Rider
+      ========================= */}
 
-          <Route
-            path="/admin/restaurants"
-            element={<AdminRestaurants />}
-          />
+      <Route
+        path="/rider/dashboard"
+        element={<RiderDashboard />}
+      />
 
-          <Route
-            path="/admin/users"
-            element={<AdminUsers />}
-          />
+      <Route
+        path="/rider/available-orders"
+        element={<AvailableOrders />}
+      />
 
-          <Route
-            path="/admin/orders"
-            element={<AdminOrders />}
-          />
+      {/* =========================
+          Super Admin
+      ========================= */}
 
-          <Route
-            path="/admin/offers"
-            element={<AdminOffers />}
-          />
+      <Route
+        path="/admin/dashboard"
+        element={<AdminDashboard />}
+      />
 
-        </Routes>
-      </main>
+      <Route
+        path="/admin/restaurants"
+        element={<AdminRestaurants />}
+      />
 
-      <Footer />
-    </>
-  );
+      <Route
+        path="/admin/users"
+        element={<AdminUsers />}
+      />
+
+      <Route
+        path="/admin/orders"
+        element={<AdminOrders />}
+      />
+
+      <Route
+        path="/admin/offers"
+        element={<AdminOffers />}
+      />
+
+    </Routes>
+  </main>
+
+  <Footer />
+</>
+
+
+);
 }
 
 export default App;
