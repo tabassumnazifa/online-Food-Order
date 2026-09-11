@@ -1,3 +1,4 @@
+
 import "./App.css";
 
 import { Routes, Route } from "react-router-dom";
@@ -40,6 +41,12 @@ import CreateOffer from "./pages/CreateOffer";
 // =========================
 
 import RiderDashboard from "./pages/RiderDashboard";
+
+// =========================
+// Admin Pages
+// =========================
+
+import AdminDashboard from "./pages/AdminDashboard";
 
 // =========================
 // App
@@ -149,6 +156,15 @@ function App() {
             element={<RiderDashboard />}
           />
 
+          {/* =========================
+              Super Admin
+          ========================= */}
+
+          <Route
+            path="/admin/dashboard"
+            element={<AdminDashboard />}
+          />
+
         </Routes>
       </main>
 
@@ -158,3 +174,4 @@ function App() {
 }
 
 export default App;
+

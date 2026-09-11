@@ -11,15 +11,14 @@ function Checkout() {
     location.state?.restaurantId || null
   );
 
+  const [paymentMethod, setPaymentMethod] = useState("1");
+
   const [loading, setLoading] = useState(true);
   const [placingOrder, setPlacingOrder] = useState(false);
   const [error, setError] = useState("");
 
   const token = localStorage.getItem("token");
 
-  // =========================
-  // LOAD CART
-  // =========================
   useEffect(() => {
     fetchCart();
   }, []);
@@ -43,8 +42,6 @@ function Checkout() {
         }
       );
 
-      console.log("Checkout Cart Response:", response.data);
-
       const cartItems = response.data;
 
       if (!cartItems || cartItems.length === 0) {
@@ -55,22 +52,11 @@ function Checkout() {
 
       setCart(cartItems);
 
-      // =========================
-      // GET RESTAURANT ID
-      // =========================
-
-      // First use the ID passed from Cart.jsx
       if (location.state?.restaurantId) {
-        console.log(
-          "Restaurant ID from Cart:",
-          location.state.restaurantId
-        );
-
         setRestaurantId(location.state.restaurantId);
         return;
       }
 
-      // Fallback: get it directly from cart response
       const firstItem = cartItems[0];
 
       const id =
@@ -78,30 +64,15 @@ function Checkout() {
         firstItem.RestaurantId;
 
       if (!id) {
-        console.error(
-          "Restaurant ID missing from cart item:",
-          firstItem
-        );
-
         setError(
           "Could not determine the restaurant for this cart."
         );
-
         return;
       }
 
-      console.log(
-        "Restaurant ID from cart response:",
-        id
-      );
-
       setRestaurantId(id);
-
     } catch (error) {
-      console.error(
-        "Checkout cart error:",
-        error
-      );
+      console.error("Checkout cart error:", error);
 
       if (error.response?.status === 401) {
         localStorage.removeItem("token");
@@ -114,15 +85,11 @@ function Checkout() {
           error.response?.data ||
           "Failed to load checkout information."
       );
-
     } finally {
       setLoading(false);
     }
   };
 
-  // =========================
-  // CALCULATE TOTAL
-  // =========================
   const calculateTotal = () => {
     return cart.reduce(
       (total, item) =>
@@ -131,14 +98,9 @@ function Checkout() {
     );
   };
 
-  // =========================
-  // PLACE ORDER
-  // =========================
   const handlePlaceOrder = async () => {
     if (!restaurantId) {
-      alert(
-        "Restaurant information is missing."
-      );
+      alert("Restaurant information is missing.");
       return;
     }
 
@@ -151,12 +113,11 @@ function Checkout() {
       setPlacingOrder(true);
       setError("");
 
-      console.log(
-        "Placing order for restaurant:",
-        restaurantId
-      );
+      // =========================
+      // STEP 1: CREATE ORDER
+      // =========================
 
-      const response = await axios.post(
+      const orderResponse = await axios.post(
         "http://localhost:5079/api/Order/checkout",
         {
           restaurantId: restaurantId,
@@ -169,30 +130,64 @@ function Checkout() {
         }
       );
 
-      console.log(
-        "Checkout response:",
-        response.data
+      const orderId = orderResponse.data?.orderId;
+
+      if (!orderId) {
+        throw new Error("Order ID was not returned.");
+      }
+
+      console.log("Order created:", orderResponse.data);
+
+      // =========================
+      // STEP 2: CREATE PAYMENT
+      // =========================
+
+      const paymentResponse = await axios.post(
+        "http://localhost:5079/api/Payment/pay",
+        {
+          orderId: orderId,
+          paymentMethod: Number(paymentMethod),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
 
-      const orderId =
-        response.data?.orderId;
+      console.log("Payment response:", paymentResponse.data);
+
+      // =========================
+      // ONLINE PAYMENT
+      // =========================
+
+      if (Number(paymentMethod) === 2) {
+        const paymentUrl =
+          paymentResponse.data?.paymentUrl;
+
+        if (!paymentUrl) {
+          throw new Error(
+            "Online payment URL was not returned."
+          );
+        }
+
+        window.location.href = paymentUrl;
+        return;
+      }
+
+      // =========================
+      // CASH ON DELIVERY
+      // =========================
 
       alert(
-        orderId
-          ? `Order placed successfully! Order #${orderId}`
-          : "Order placed successfully!"
+        `Order placed successfully! Order #${orderId}`
       );
-
-      // Cart is automatically cleared by backend
-      // after successful checkout.
 
       navigate("/orders");
 
     } catch (error) {
-      console.error(
-        "Checkout error:",
-        error
-      );
+      console.error("Checkout/payment error:", error);
 
       console.error(
         "Status:",
@@ -208,183 +203,120 @@ function Checkout() {
         error.response?.data?.message ||
         (typeof error.response?.data === "string"
           ? error.response.data
-          : "Failed to place order.");
+          : error.message ||
+            "Failed to place order or process payment.");
 
       alert(message);
-
     } finally {
       setPlacingOrder(false);
     }
   };
 
-  // =========================
-  // LOADING
-  // =========================
   if (loading) {
     return (
       <div className="container">
-
         <h1>🧾 Checkout</h1>
-
-        <p>
-          Loading checkout...
-        </p>
-
+        <p>Loading checkout...</p>
       </div>
     );
   }
 
-  // =========================
-  // ERROR
-  // =========================
   if (error) {
     return (
       <div className="container">
-
         <h1>🧾 Checkout</h1>
 
-        <p>
-          {error}
-        </p>
+        <p>{error}</p>
 
         <button
-          onClick={() =>
-            navigate("/cart")
-          }
+          type="button"
+          onClick={() => navigate("/cart")}
         >
           ← Back to Cart
         </button>
-
       </div>
     );
   }
 
-  // =========================
-  // CHECKOUT PAGE
-  // =========================
   return (
     <div className="container">
-
       <h1>🧾 Checkout</h1>
 
       <div className="checkout-card">
-
-        <h2>
-          Your Order
-        </h2>
+        <h2>Your Order</h2>
 
         {cart.map((item) => (
           <div
             className="checkout-item"
             key={item.id}
           >
-
             <div>
-
               <h3>
-                {item.foodName ||
-                  "Food Item"}
+                {item.foodName || "Food Item"}
               </h3>
 
               <p>
-                ৳{item.price} ×{" "}
-                {item.quantity}
+                ৳{item.price} × {item.quantity}
               </p>
-
             </div>
 
             <strong>
-              ৳
-              {item.price *
-                item.quantity}
+              ৳{item.price * item.quantity}
             </strong>
-
           </div>
         ))}
 
         <hr />
 
-        {/* ========================= */}
-        {/* TOTAL */}
-        {/* ========================= */}
-
         <div className="checkout-total">
-
-          <h2>
-            Total
-          </h2>
+          <h2>Total</h2>
 
           <h2>
             ৳{calculateTotal()}
           </h2>
-
         </div>
 
-        {/* ========================= */}
-        {/* DELIVERY ADDRESS */}
-        {/* ========================= */}
-
         <div className="checkout-section">
-
-          <h3>
-            📍 Delivery Address
-          </h3>
+          <h3>📍 Delivery Address</h3>
 
           <input
             type="text"
             placeholder="Enter your delivery address"
             className="checkout-input"
           />
-
         </div>
 
-        {/* ========================= */}
-        {/* PAYMENT */}
-        {/* ========================= */}
-
         <div className="checkout-section">
-
-          <h3>
-            💳 Payment Method
-          </h3>
+          <h3>💳 Payment Method</h3>
 
           <select
             className="checkout-input"
+            value={paymentMethod}
+            onChange={(e) =>
+              setPaymentMethod(e.target.value)
+            }
           >
-
-            <option value="CashOnDelivery">
+            <option value="1">
               Cash on Delivery
             </option>
 
-            <option
-              value="OnlinePayment"
-              disabled
-            >
+            <option value="2">
               Online Payment
             </option>
-
           </select>
-
         </div>
 
-        {/* ========================= */}
-        {/* PLACE ORDER */}
-        {/* ========================= */}
-
         <button
+          type="button"
           className="place-order-btn"
           onClick={handlePlaceOrder}
           disabled={placingOrder}
         >
-
           {placingOrder
-            ? "Placing Order..."
+            ? "Processing..."
             : "🛍️ Place Order"}
-
         </button>
-
       </div>
-
     </div>
   );
 }
