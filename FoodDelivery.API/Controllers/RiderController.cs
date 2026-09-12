@@ -1,11 +1,11 @@
-
+using System;
+using System.Security.Claims;
 using FoodDelivery.Core.DTOs;
 using FoodDelivery.Core.Enums;
 using FoodDelivery.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace FoodDelivery.API.Controllers
 {
@@ -39,26 +39,22 @@ namespace FoodDelivery.API.Controllers
 
             var dashboard = new RiderDashboardDto
             {
-                // Orders waiting for a rider
                 AvailableOrders = await _context.Orders
                     .CountAsync(o =>
                         o.RiderId == null &&
                         o.OrderStatus == OrderStatus.ReadyForPickup),
 
-                // Rider's active deliveries
                 ActiveOrders = await _context.Orders
                     .CountAsync(o =>
                         o.RiderId == riderId &&
                         o.OrderStatus != OrderStatus.Delivered &&
                         o.OrderStatus != OrderStatus.Cancelled),
 
-                // Completed deliveries
                 CompletedOrders = await _context.Orders
                     .CountAsync(o =>
                         o.RiderId == riderId &&
                         o.OrderStatus == OrderStatus.Delivered),
 
-                // Total deliveries
                 TotalDeliveries = await _context.Orders
                     .CountAsync(o =>
                         o.RiderId == riderId &&
@@ -119,7 +115,6 @@ namespace FoodDelivery.API.Controllers
                 return NotFound("Order not found.");
             }
 
-            // Make sure another rider has not already taken it
             if (order.RiderId != null)
             {
                 return BadRequest(
@@ -127,8 +122,6 @@ namespace FoodDelivery.API.Controllers
                 );
             }
 
-            // Rider can only accept orders that are
-            // ready for pickup.
             if (order.OrderStatus != OrderStatus.ReadyForPickup)
             {
                 return BadRequest(
@@ -136,11 +129,7 @@ namespace FoodDelivery.API.Controllers
                 );
             }
 
-            // Assign the order to this rider
             order.RiderId = riderId;
-
-            // Once rider accepts the delivery,
-            // the order is now out for delivery.
             order.OrderStatus = OrderStatus.OutForDelivery;
 
             await _context.SaveChangesAsync();
@@ -205,7 +194,9 @@ namespace FoodDelivery.API.Controllers
                 return Unauthorized();
             }
 
+            // Include the Payment entity so we can update it if it's COD
             var order = await _context.Orders
+                .Include(o => o.Payment) 
                 .FirstOrDefaultAsync(o =>
                     o.Id == orderId &&
                     o.RiderId == riderId);
@@ -233,33 +224,6 @@ namespace FoodDelivery.API.Controllers
                 );
             }
 
-            // =========================
-            // RIDER DELIVERY FLOW
-            // =========================
-            //
-            // OutForDelivery
-            //       ↓
-            // Delivered
-            //
-            // The restaurant controls:
-            //
-            // Pending
-            //       ↓
-            // Accepted
-            //       ↓
-            // Preparing
-            //       ↓
-            // ReadyForPickup
-            //
-            // The rider controls:
-            //
-            // ReadyForPickup
-            //       ↓
-            // OutForDelivery
-            //       ↓
-            // Delivered
-            // =========================
-
             var validTransition =
                 order.OrderStatus == OrderStatus.OutForDelivery &&
                 newStatus == OrderStatus.Delivered;
@@ -272,6 +236,16 @@ namespace FoodDelivery.API.Controllers
             }
 
             order.OrderStatus = newStatus;
+
+            // Automatically mark Cash on Delivery payments as Paid upon delivery
+            if (newStatus == OrderStatus.Delivered && order.Payment != null)
+            {
+                if (order.Payment.PaymentMethod == PaymentMethod.CashOnDelivery)
+                {
+                    order.Payment.PaymentStatus = PaymentStatus.Paid;
+                    order.Payment.PaymentDate = DateTime.UtcNow;
+                }
+            }
 
             await _context.SaveChangesAsync();
 
