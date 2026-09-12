@@ -1,18 +1,17 @@
+
 import { useEffect, useState } from "react";
 import axios from "axios";
 
 function ManageFoods() {
   const [foods, setFoods] = useState([]);
   const [categories, setCategories] = useState([]);
-
   const [restaurantId, setRestaurantId] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
   const [error, setError] = useState("");
-  const [showForm, setShowForm] = useState(false);
 
+  const [showForm, setShowForm] = useState(false);
   const [editingFoodId, setEditingFoodId] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -39,7 +38,6 @@ function ManageFoods() {
   // ================================
   // LOAD RESTAURANT + FOODS
   // ================================
-
   const loadRestaurantAndFoods = async () => {
     try {
       setLoading(true);
@@ -75,7 +73,6 @@ function ManageFoods() {
   // ================================
   // LOAD CATEGORIES
   // ================================
-
   const loadCategories = async () => {
     try {
       const response = await axios.get(
@@ -92,23 +89,19 @@ function ManageFoods() {
   // ================================
   // HANDLE INPUT
   // ================================
-
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    setFormData({
-      ...formData,
+    setFormData((previous) => ({
+      ...previous,
       [name]: type === "checkbox" ? checked : value,
-    });
+    }));
   };
 
   // ================================
-  // OPEN ADD FORM
+  // RESET FORM
   // ================================
-
-  const openAddForm = () => {
-    setEditingFoodId(null);
-
+  const resetForm = () => {
     setFormData({
       name: "",
       description: "",
@@ -117,13 +110,20 @@ function ManageFoods() {
       categoryId: "",
     });
 
+    setEditingFoodId(null);
+  };
+
+  // ================================
+  // OPEN ADD FORM
+  // ================================
+  const openAddForm = () => {
+    resetForm();
     setShowForm(true);
   };
 
   // ================================
   // OPEN EDIT FORM
   // ================================
-
   const openEditForm = (food) => {
     setEditingFoodId(food.id);
 
@@ -136,12 +136,24 @@ function ManageFoods() {
     });
 
     setShowForm(true);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  // ================================
+  // CLOSE FORM
+  // ================================
+  const closeForm = () => {
+    setShowForm(false);
+    resetForm();
   };
 
   // ================================
   // ADD / UPDATE FOOD
   // ================================
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -159,8 +171,8 @@ function ManageFoods() {
       setSaving(true);
 
       const foodData = {
-        name: formData.name,
-        description: formData.description,
+        name: formData.name.trim(),
+        description: formData.description.trim(),
         price: Number(formData.price),
         isAvailable: formData.isAvailable,
         restaurantId: restaurantId,
@@ -168,7 +180,6 @@ function ManageFoods() {
       };
 
       if (editingFoodId) {
-        // UPDATE
         await axios.put(
           `http://localhost:5079/api/Food/${editingFoodId}`,
           foodData,
@@ -177,7 +188,6 @@ function ManageFoods() {
 
         alert("Food updated successfully!");
       } else {
-        // ADD
         await axios.post(
           "http://localhost:5079/api/Food/add",
           foodData,
@@ -187,19 +197,9 @@ function ManageFoods() {
         alert("Food added successfully!");
       }
 
-      setShowForm(false);
-      setEditingFoodId(null);
-
-      setFormData({
-        name: "",
-        description: "",
-        price: "",
-        isAvailable: true,
-        categoryId: "",
-      });
+      closeForm();
 
       await loadRestaurantAndFoods();
-
     } catch (error) {
       console.error("Food save error:", error);
 
@@ -215,7 +215,6 @@ function ManageFoods() {
   // ================================
   // DELETE FOOD
   // ================================
-
   const handleDelete = async (foodId) => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this food?"
@@ -234,7 +233,6 @@ function ManageFoods() {
       alert("Food deleted successfully!");
 
       await loadRestaurantAndFoods();
-
     } catch (error) {
       console.error("Delete food error:", error);
 
@@ -245,122 +243,253 @@ function ManageFoods() {
     }
   };
 
+  const availableCount = foods.filter(
+    (food) => food.isAvailable
+  ).length;
+
+  const unavailableCount = foods.length - availableCount;
+
   return (
-    <div className="container">
+    <div className="manage-foods-page">
 
-      {/* HEADER */}
+      {/* ================================
+          PAGE HEADER
+      ================================= */}
 
-      <div className="foods-header">
-
+      <div className="manage-foods-header">
         <div>
-          <h1>🍔 Manage Foods</h1>
+          <span className="manage-foods-eyebrow">
+            RESTAURANT MANAGEMENT
+          </span>
+
+          <h1>Manage Foods</h1>
 
           <p>
-            Add and manage your restaurant's food items.
+            Add, update and manage the food items
+            available on your restaurant menu.
           </p>
         </div>
 
-        <button onClick={openAddForm}>
-          + Add Food
+        <button
+          type="button"
+          className="add-food-btn"
+          onClick={openAddForm}
+        >
+          <span>+</span>
+          Add Food
         </button>
-
       </div>
 
-      {/* FORM */}
+      {/* ================================
+          STATISTICS
+      ================================= */}
+
+      {!loading && !error && (
+        <div className="food-stats">
+
+          <div className="food-stat-card">
+            <div className="food-stat-icon green">
+              🍽️
+            </div>
+
+            <div>
+              <span>Total Foods</span>
+              <strong>{foods.length}</strong>
+            </div>
+          </div>
+
+          <div className="food-stat-card">
+            <div className="food-stat-icon orange">
+              ✓
+            </div>
+
+            <div>
+              <span>Available</span>
+              <strong>{availableCount}</strong>
+            </div>
+          </div>
+
+          <div className="food-stat-card">
+            <div className="food-stat-icon gray">
+              ◷
+            </div>
+
+            <div>
+              <span>Unavailable</span>
+              <strong>{unavailableCount}</strong>
+            </div>
+          </div>
+
+          <div className="food-stat-card">
+            <div className="food-stat-icon blue">
+              📂
+            </div>
+
+            <div>
+              <span>Categories</span>
+              <strong>{categories.length}</strong>
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* ================================
+          ADD / EDIT FORM
+      ================================= */}
 
       {showForm && (
         <div className="food-form-card">
 
-          <h2>
-            {editingFoodId
-              ? "✏️ Edit Food"
-              : "➕ Add New Food"}
-          </h2>
+          <div className="food-form-header">
+            <div>
+              <span className="form-eyebrow">
+                {editingFoodId
+                  ? "UPDATE MENU ITEM"
+                  : "NEW MENU ITEM"}
+              </span>
 
-          <form onSubmit={handleSubmit}>
+              <h2>
+                {editingFoodId
+                  ? "Edit Food"
+                  : "Add New Food"}
+              </h2>
 
-            <label>
-              Food Name
-            </label>
+              <p>
+                {editingFoodId
+                  ? "Update the information for this menu item."
+                  : "Add a delicious new item to your restaurant menu."}
+              </p>
+            </div>
 
-            <input
-              type="text"
-              name="name"
-              placeholder="Enter food name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-            />
-
-            <label>
-              Description
-            </label>
-
-            <textarea
-              name="description"
-              placeholder="Enter food description"
-              value={formData.description}
-              onChange={handleChange}
-              required
-            />
-
-            <label>
-              Price
-            </label>
-
-            <input
-              type="number"
-              name="price"
-              placeholder="Enter price"
-              value={formData.price}
-              onChange={handleChange}
-              min="1"
-              required
-            />
-
-            <label>
-              Category
-            </label>
-
-            <select
-              name="categoryId"
-              value={formData.categoryId}
-              onChange={handleChange}
-              required
+            <button
+              type="button"
+              className="form-close-btn"
+              onClick={closeForm}
             >
+              ×
+            </button>
+          </div>
 
-              <option value="">
-                Select Category
-              </option>
+          <form
+            className="food-form"
+            onSubmit={handleSubmit}
+          >
 
-              {categories.map((category) => (
-                <option
-                  key={category.id}
-                  value={category.id}
+            <div className="food-form-grid">
+
+              <div className="food-form-field">
+                <label>
+                  Food Name
+                </label>
+
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="e.g. Chicken Biryani"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div className="food-form-field">
+                <label>
+                  Price
+                </label>
+
+                <div className="price-input">
+                  <span>৳</span>
+
+                  <input
+                    type="number"
+                    name="price"
+                    placeholder="0"
+                    value={formData.price}
+                    onChange={handleChange}
+                    min="1"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="food-form-field">
+                <label>
+                  Category
+                </label>
+
+                <select
+                  name="categoryId"
+                  value={formData.categoryId}
+                  onChange={handleChange}
+                  required
                 >
-                  {category.name}
-                </option>
-              ))}
+                  <option value="">
+                    Select Category
+                  </option>
 
-            </select>
+                  {categories.map((category) => (
+                    <option
+                      key={category.id}
+                      value={category.id}
+                    >
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <label className="availability-checkbox">
+              <div className="food-form-field food-availability-field">
+                <label>
+                  Availability
+                </label>
 
-              <input
-                type="checkbox"
-                name="isAvailable"
-                checked={formData.isAvailable}
-                onChange={handleChange}
-              />
+                <label className="availability-toggle">
+                  <input
+                    type="checkbox"
+                    name="isAvailable"
+                    checked={formData.isAvailable}
+                    onChange={handleChange}
+                  />
 
-              Available for customers
+                  <span className="toggle-slider"></span>
 
-            </label>
+                  <span>
+                    Available for customers
+                  </span>
+                </label>
+              </div>
 
-            <div className="form-actions">
+              <div className="food-form-field full-width">
+                <label>
+                  Description
+                </label>
+
+                <textarea
+                  name="description"
+                  placeholder="Describe the food item..."
+                  value={formData.description}
+                  onChange={handleChange}
+                  rows="4"
+                  required
+                />
+              </div>
+
+            </div>
+
+            <div className="food-form-actions">
+
+              <button
+                type="button"
+                className="cancel-food-btn"
+                onClick={closeForm}
+              >
+                Cancel
+              </button>
 
               <button
                 type="submit"
+                className="save-food-btn"
                 disabled={saving}
               >
                 {saving
@@ -370,124 +499,196 @@ function ManageFoods() {
                   : "Add Food"}
               </button>
 
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-              >
-                Cancel
-              </button>
-
             </div>
 
           </form>
-
         </div>
       )}
 
-      {/* ERROR */}
+      {/* ================================
+          ERROR
+      ================================= */}
 
       {error && (
-        <div className="error-message">
-          {error}
+        <div className="foods-error">
+          <span>⚠️</span>
+
+          <div>
+            <strong>Unable to load foods</strong>
+            <p>{error}</p>
+          </div>
+
+          <button
+            type="button"
+            onClick={loadRestaurantAndFoods}
+          >
+            Retry
+          </button>
         </div>
       )}
 
-      {/* LOADING */}
+      {/* ================================
+          LOADING
+      ================================= */}
 
       {loading && (
-        <p>Loading food items...</p>
+        <div className="foods-loading">
+          <div className="loading-spinner"></div>
+
+          <h3>Loading your menu...</h3>
+
+          <p>
+            Please wait while we fetch your food items.
+          </p>
+        </div>
       )}
 
-      {/* EMPTY */}
+      {/* ================================
+          EMPTY STATE
+      ================================= */}
 
       {!loading &&
         !error &&
         foods.length === 0 && (
-          <div className="empty-foods">
+          <div className="foods-empty">
 
-            <h2>🍽️ No Food Items Yet</h2>
+            <div className="empty-food-icon">
+              🍽️
+            </div>
+
+            <span className="empty-eyebrow">
+              YOUR MENU IS EMPTY
+            </span>
+
+            <h2>
+              Let's add your first food item
+            </h2>
 
             <p>
-              Start adding food items to your restaurant menu.
+              Create your menu by adding delicious
+              food items that customers can order.
             </p>
+
+            <button
+              type="button"
+              className="add-food-btn empty-add-btn"
+              onClick={openAddForm}
+            >
+              <span>+</span>
+              Add Your First Food
+            </button>
 
           </div>
         )}
 
-      {/* FOOD LIST */}
+      {/* ================================
+          FOOD LIST
+      ================================= */}
 
       {!loading &&
         !error &&
         foods.length > 0 && (
+          <section className="foods-section">
 
-          <div className="food-list">
+            <div className="foods-section-header">
+              <div>
+                <span className="section-eyebrow">
+                  MENU ITEMS
+                </span>
 
-            {foods.map((food) => (
-
-              <div
-                className="food-card"
-                key={food.id}
-              >
-
-                <div className="food-card-header">
-
-                  <h2>
-                    {food.name}
-                  </h2>
-
-                  <span
-                    className={
-                      food.isAvailable
-                        ? "available"
-                        : "unavailable"
-                    }
-                  >
-                    {food.isAvailable
-                      ? "Available"
-                      : "Unavailable"}
-                  </span>
-
-                </div>
-
-                <p className="food-description">
-                  {food.description}
-                </p>
-
-                <div className="food-details">
-
-                  <p>
-                    💰 <strong>
-                      ৳{food.price}
-                    </strong>
-                  </p>
-
-                  <p>
-                    📂 {food.categoryName}
-                  </p>
-
-                </div>
-
-                <div className="food-actions">
-
-                  <button
-                    onClick={() => openEditForm(food)}
-                  >
-                    ✏️ Edit
-                  </button>
-
-                  <button
-                    onClick={() => handleDelete(food.id)}
-                  >
-                    🗑️ Delete
-                  </button>
-
-                </div>
-
+                <h2>
+                  Your Food Menu
+                </h2>
               </div>
 
-            ))}
+              <span className="food-count-badge">
+                {foods.length}{" "}
+                {foods.length === 1
+                  ? "item"
+                  : "items"}
+              </span>
+            </div>
 
-          </div>
+            <div className="food-list">
+
+              {foods.map((food) => (
+                <article
+                  className="food-card"
+                  key={food.id}
+                >
+
+                  <div className="food-card-image">
+                    <span>🍴</span>
+
+                    <div
+                      className={
+                        food.isAvailable
+                          ? "food-status available"
+                          : "food-status unavailable"
+                      }
+                    >
+                      <span></span>
+
+                      {food.isAvailable
+                        ? "Available"
+                        : "Unavailable"}
+                    </div>
+                  </div>
+
+                  <div className="food-card-body">
+
+                    <div className="food-card-top">
+                      <span className="food-category">
+                        📂{" "}
+                        {food.categoryName ||
+                          "Uncategorized"}
+                      </span>
+
+                      <span className="food-price">
+                        ৳{food.price}
+                      </span>
+                    </div>
+
+                    <h3>
+                      {food.name}
+                    </h3>
+
+                    <p className="food-description">
+                      {food.description ||
+                        "No description available."}
+                    </p>
+
+                    <div className="food-card-footer">
+
+                      <button
+                        type="button"
+                        className="edit-food-btn"
+                        onClick={() =>
+                          openEditForm(food)
+                        }
+                      >
+                        ✏️ Edit
+                      </button>
+
+                      <button
+                        type="button"
+                        className="delete-food-btn"
+                        onClick={() =>
+                          handleDelete(food.id)
+                        }
+                      >
+                        🗑 Delete
+                      </button>
+
+                    </div>
+
+                  </div>
+
+                </article>
+              ))}
+
+            </div>
+          </section>
         )}
 
     </div>

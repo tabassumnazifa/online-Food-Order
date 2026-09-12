@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
@@ -87,7 +86,6 @@ function Login() {
       }
     } catch (error) {
       console.error("Login Error:", error);
-
       console.error("Status:", error.response?.status);
       console.error("Response:", error.response?.data);
 
@@ -108,9 +106,19 @@ function Login() {
   return (
     <main className="auth-page">
       <div className="auth-layout">
-        {/* Left Side */}
+
+        {/* LEFT BRAND PANEL */}
         <section className="auth-brand-panel">
           <div className="auth-brand-content">
+
+            <div className="auth-brand-logo">
+              <span>🍴</span>
+
+              <strong>
+                Food<span>Delivery</span>
+              </strong>
+            </div>
+
             <span className="auth-brand-badge">
               FOOD DELIVERY
             </span>
@@ -121,54 +129,94 @@ function Login() {
               <span>just a few clicks away.</span>
             </h1>
 
-            <p>
+            <p className="auth-brand-description">
               Discover restaurants, explore delicious meals and
               enjoy convenient food delivery from one place.
             </p>
 
             <div className="auth-features">
+
               <div className="auth-feature">
-                <span>🍽️</span>
+                <div className="auth-feature-icon">
+                  🍽️
+                </div>
+
                 <div>
                   <strong>Great food choices</strong>
-                  <small>Explore a variety of restaurants</small>
+
+                  <small>
+                    Explore a variety of restaurants and meals.
+                  </small>
                 </div>
               </div>
 
               <div className="auth-feature">
-                <span>⚡</span>
+                <div className="auth-feature-icon">
+                  ⚡
+                </div>
+
                 <div>
                   <strong>Fast & convenient</strong>
-                  <small>Order without the hassle</small>
+
+                  <small>
+                    Order your favorite food without the hassle.
+                  </small>
                 </div>
               </div>
 
               <div className="auth-feature">
-                <span>🔒</span>
+                <div className="auth-feature-icon">
+                  🔒
+                </div>
+
                 <div>
                   <strong>Secure experience</strong>
-                  <small>Your account stays protected</small>
+
+                  <small>
+                    Your account and orders stay protected.
+                  </small>
                 </div>
               </div>
+
             </div>
+
+            <div className="auth-brand-footer">
+              <span>Fresh meals</span>
+              <span>•</span>
+              <span>Easy ordering</span>
+              <span>•</span>
+              <span>Happy customers</span>
+            </div>
+
           </div>
+
+          <div className="auth-decoration auth-decoration-one"></div>
+          <div className="auth-decoration auth-decoration-two"></div>
+          <div className="auth-decoration auth-decoration-three"></div>
         </section>
 
-        {/* Login Side */}
+        {/* RIGHT LOGIN PANEL */}
         <section className="auth-form-panel">
           <div className="auth-card">
+
             <div className="auth-header">
-              <div className="auth-logo">🍔</div>
+
+              <div className="auth-logo">
+                🍔
+              </div>
 
               <span className="auth-eyebrow">
                 WELCOME BACK
               </span>
 
-              <h2>Sign in to your account</h2>
+              <h2>
+                Sign in to your account
+              </h2>
 
               <p>
-                Enter your details to continue.
+                Enter your details to continue ordering.
               </p>
+
             </div>
 
             <form
@@ -176,38 +224,66 @@ function Login() {
               className="auth-form"
               autoComplete="off"
             >
-              <div className="auth-field">
-                <label htmlFor="email">Email address</label>
 
-                <input
-                  id="email"
-                  type="email"
-                  name="email"
-                  placeholder="you@example.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  autoComplete="email"
-                  required
-                />
-              </div>
-
+              {/* EMAIL */}
               <div className="auth-field">
-                <div className="auth-label-row">
-                  <label htmlFor="password">Password</label>
+
+                <label htmlFor="email">
+                  Email address
+                </label>
+
+                <div className="auth-input-wrapper">
+
+                  <span className="auth-input-icon">
+                    ✉
+                  </span>
+
+                  <input
+                    id="email"
+                    type="email"
+                    name="email"
+                    placeholder="you@example.com"
+                    value={formData.email}
+                    onChange={handleChange}
+                    autoComplete="email"
+                    required
+                  />
+
                 </div>
 
-                <input
-                  id="password"
-                  type="password"
-                  name="password"
-                  placeholder="Enter your password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  autoComplete="current-password"
-                  required
-                />
               </div>
 
+              {/* PASSWORD */}
+              <div className="auth-field">
+
+                <div className="auth-label-row">
+                  <label htmlFor="password">
+                    Password
+                  </label>
+                </div>
+
+                <div className="auth-input-wrapper">
+
+                  <span className="auth-input-icon">
+                    🔒
+                  </span>
+
+                  <input
+                    id="password"
+                    type="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    autoComplete="current-password"
+                    required
+                  />
+
+                </div>
+
+              </div>
+
+              {/* LOGIN BUTTON */}
               <button
                 type="submit"
                 className="auth-submit-btn"
@@ -221,31 +297,46 @@ function Login() {
                 ) : (
                   <>
                     Sign In
-                    <span>→</span>
+
+                    <span className="auth-submit-arrow">
+                      →
+                    </span>
                   </>
                 )}
               </button>
+
             </form>
 
+            {/* DIVIDER */}
             <div className="auth-divider">
               <span></span>
               <small>OR</small>
               <span></span>
             </div>
 
+            {/* REGISTER */}
             <div className="auth-register">
-              <p>Don't have an account?</p>
+
+              <p>
+                Don't have an account?
+              </p>
 
               <Link to="/register">
                 Create a new account
                 <span>→</span>
               </Link>
+
             </div>
+
           </div>
         </section>
+
       </div>
     </main>
   );
 }
 
 export default Login;
+
+
+ 

@@ -30,7 +30,6 @@ namespace FoodDelivery.API.Controllers
             _emailService = emailService;
         }
 
-
         // =====================================================
         // REGISTER
         // =====================================================
@@ -38,6 +37,7 @@ namespace FoodDelivery.API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto model)
         {
+            // Check if email already exists
             var existingUser =
                 await _userManager.FindByEmailAsync(model.Email);
 
@@ -46,6 +46,7 @@ namespace FoodDelivery.API.Controllers
                 return BadRequest("Email is already registered.");
             }
 
+            // Allowed registration roles
             var allowedRoles = new[]
             {
                 Roles.Customer,
@@ -58,16 +59,21 @@ namespace FoodDelivery.API.Controllers
                 return BadRequest("Invalid role selected.");
             }
 
+            // Create user
             var user = new ApplicationUser
             {
                 FullName = model.FullName,
                 Email = model.Email,
                 UserName = model.Email,
-                EmailConfirmed = false,
+
+                // Email verification is not required anymore
+                EmailConfirmed = true,
+
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
 
+            // Create account with Identity password hashing
             var result = await _userManager.CreateAsync(
                 user,
                 model.Password
@@ -78,6 +84,7 @@ namespace FoodDelivery.API.Controllers
                 return BadRequest(result.Errors);
             }
 
+            // Assign selected role
             var roleResult = await _userManager.AddToRoleAsync(
                 user,
                 model.Role
@@ -85,88 +92,16 @@ namespace FoodDelivery.API.Controllers
 
             if (!roleResult.Succeeded)
             {
+                // Remove user if role assignment fails
                 await _userManager.DeleteAsync(user);
 
                 return BadRequest(roleResult.Errors);
             }
 
-
-            // =================================================
-            // EMAIL VERIFICATION
-            // =================================================
-
-            var verificationToken =
-                await _userManager.GenerateEmailConfirmationTokenAsync(user);
-
-            var encodedToken =
-                Uri.EscapeDataString(verificationToken);
-
-            var verificationLink =
-                $"http://localhost:5079/api/Auth/confirm-email" +
-                $"?email={Uri.EscapeDataString(user.Email!)}" +
-                $"&token={encodedToken}";
-
-            var emailBody = $@"
-<html>
-<body>
-
-<h2>Welcome to Food Delivery</h2>
-
-<p>Hello {user.FullName},</p>
-
-<p>
-Thank you for creating your Food Delivery account.
-</p>
-
-<p>
-Your selected account type is:
-<strong>{model.Role}</strong>
-</p>
-
-<p>
-Please verify your email address by clicking the button below.
-</p>
-
-<br/>
-
-<a href='{verificationLink}'
-   style='padding:10px 20px;
-   background:#28a745;
-   color:white;
-   text-decoration:none;'>
-   Verify Email
-</a>
-
-<br/><br/>
-
-<p>
-If you did not create this account, please ignore this email.
-</p>
-
-</body>
-</html>
-";
-
-            try
-            {
-                await _emailService.SendEmailAsync(
-                    user.Email!,
-                    "Verify Your Food Delivery Account",
-                    emailBody
-                );
-            }
-            catch
-            {
-                return StatusCode(
-                    StatusCodes.Status500InternalServerError,
-                    "Account was created, but the verification email could not be sent. Please try again later."
-                );
-            }
-
+            // Registration completed
             return Ok(new
             {
-                message =
-                    $"Registration successful as {model.Role}. Please verify your email."
+                message = $"Registration successful as {model.Role}."
             });
         }
 
@@ -178,6 +113,7 @@ If you did not create this account, please ignore this email.
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto model)
         {
+            // Find user by email
             var user =
                 await _userManager.FindByEmailAsync(model.Email);
 
@@ -186,11 +122,7 @@ If you did not create this account, please ignore this email.
                 return Unauthorized("Invalid email or password.");
             }
 
-
-            // =================================================
-            // ACCOUNT STATUS
-            // =================================================
-
+            // Check account status
             if (!user.IsActive)
             {
                 return Unauthorized(
@@ -198,11 +130,7 @@ If you did not create this account, please ignore this email.
                 );
             }
 
-
-            // =================================================
-            // PASSWORD
-            // =================================================
-
+            // Check password
             var passwordValid =
                 await _userManager.CheckPasswordAsync(
                     user,
@@ -214,23 +142,7 @@ If you did not create this account, please ignore this email.
                 return Unauthorized("Invalid email or password.");
             }
 
-
-            // =================================================
-            // EMAIL VERIFICATION
-            // =================================================
-
-            if (!user.EmailConfirmed)
-            {
-                return Unauthorized(
-                    "Please verify your email before logging in."
-                );
-            }
-
-
-            // =================================================
-            // USER ROLES
-            // =================================================
-
+            // Get user roles
             var roles =
                 await _userManager.GetRolesAsync(user);
 
@@ -240,7 +152,6 @@ If you did not create this account, please ignore this email.
                     "No role is assigned to this account."
                 );
             }
-
 
             // =================================================
             // JWT SETTINGS
@@ -261,7 +172,6 @@ If you did not create this account, please ignore this email.
 
             var key =
                 Encoding.UTF8.GetBytes(jwtKey);
-
 
             // =================================================
             // JWT CLAIMS
@@ -294,7 +204,6 @@ If you did not create this account, please ignore this email.
                     )
                 );
             }
-
 
             // =================================================
             // CREATE JWT
@@ -334,47 +243,6 @@ If you did not create this account, please ignore this email.
             {
                 token = tokenString,
                 role = roles.FirstOrDefault()
-            });
-        }
-
-
-        // =====================================================
-        // CONFIRM EMAIL
-        // =====================================================
-
-        [HttpGet("confirm-email")]
-        public async Task<IActionResult> ConfirmEmail(
-            string email,
-            string token)
-        {
-            var user =
-                await _userManager.FindByEmailAsync(email);
-
-            if (user == null)
-            {
-                return BadRequest("Invalid email.");
-            }
-
-            var decodedToken =
-                Uri.UnescapeDataString(token);
-
-            var result =
-                await _userManager.ConfirmEmailAsync(
-                    user,
-                    decodedToken
-                );
-
-            if (!result.Succeeded)
-            {
-                return BadRequest(
-                    "Email verification failed."
-                );
-            }
-
-            return Ok(new
-            {
-                message =
-                    "Email verified successfully. You can now login."
             });
         }
 

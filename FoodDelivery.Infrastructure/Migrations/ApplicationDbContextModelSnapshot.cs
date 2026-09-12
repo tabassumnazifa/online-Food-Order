@@ -127,7 +127,7 @@ namespace FoodDelivery.Infrastructure.Migrations
 
                     b.HasIndex("FoodId");
 
-                    b.ToTable("CartItems");
+                    b.ToTable("CartItems", (string)null);
                 });
 
             modelBuilder.Entity("FoodDelivery.Core.Models.Category", b =>
@@ -145,7 +145,7 @@ namespace FoodDelivery.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("FoodDelivery.Core.Models.Feedback", b =>
@@ -180,7 +180,7 @@ namespace FoodDelivery.Infrastructure.Migrations
 
                     b.HasIndex("RestaurantId");
 
-                    b.ToTable("Feedbacks");
+                    b.ToTable("Feedbacks", (string)null);
                 });
 
             modelBuilder.Entity("FoodDelivery.Core.Models.Food", b =>
@@ -218,7 +218,7 @@ namespace FoodDelivery.Infrastructure.Migrations
 
                     b.HasIndex("RestaurantId");
 
-                    b.ToTable("Foods");
+                    b.ToTable("Foods", (string)null);
                 });
 
             modelBuilder.Entity("FoodDelivery.Core.Models.Offer", b =>
@@ -264,7 +264,7 @@ namespace FoodDelivery.Infrastructure.Migrations
 
                     b.HasIndex("RestaurantId");
 
-                    b.ToTable("Offers");
+                    b.ToTable("Offers", (string)null);
                 });
 
             modelBuilder.Entity("FoodDelivery.Core.Models.Order", b =>
@@ -307,7 +307,7 @@ namespace FoodDelivery.Infrastructure.Migrations
 
                     b.HasIndex("RiderId");
 
-                    b.ToTable("Orders");
+                    b.ToTable("Orders", (string)null);
                 });
 
             modelBuilder.Entity("FoodDelivery.Core.Models.OrderItem", b =>
@@ -336,7 +336,7 @@ namespace FoodDelivery.Infrastructure.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("OrderItems");
+                    b.ToTable("OrderItems", (string)null);
                 });
 
             modelBuilder.Entity("FoodDelivery.Core.Models.Payment", b =>
@@ -375,7 +375,7 @@ namespace FoodDelivery.Infrastructure.Migrations
                     b.HasIndex("OrderId")
                         .IsUnique();
 
-                    b.ToTable("Payments");
+                    b.ToTable("Payments", (string)null);
                 });
 
             modelBuilder.Entity("FoodDelivery.Core.Models.Policy", b =>
@@ -405,7 +405,7 @@ namespace FoodDelivery.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Policies");
+                    b.ToTable("Policies", (string)null);
                 });
 
             modelBuilder.Entity("FoodDelivery.Core.Models.Restaurant", b =>
@@ -452,7 +452,7 @@ namespace FoodDelivery.Infrastructure.Migrations
 
                     b.HasIndex("OwnerId");
 
-                    b.ToTable("Restaurants");
+                    b.ToTable("Restaurants", (string)null);
                 });
 
             modelBuilder.Entity("FoodDelivery.Core.Models.RiderLocation", b =>
@@ -480,7 +480,7 @@ namespace FoodDelivery.Infrastructure.Migrations
 
                     b.HasIndex("RiderId");
 
-                    b.ToTable("RiderLocations");
+                    b.ToTable("RiderLocations", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
