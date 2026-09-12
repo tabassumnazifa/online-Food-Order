@@ -1,4 +1,5 @@
-﻿using FoodDelivery.Core.DTOs;
+﻿
+using FoodDelivery.Core.DTOs;
 using FoodDelivery.Core.Enums;
 using FoodDelivery.Core.Models;
 using FoodDelivery.Infrastructure.Data;
@@ -122,6 +123,31 @@ namespace FoodDelivery.API.Controllers
         }
 
         // =========================
+        // GET ALL RESTAURANTS
+        // PUBLIC CUSTOMER ENDPOINT
+        // =========================
+        [AllowAnonymous]
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllRestaurants()
+        {
+            var restaurants = await _context.Restaurants
+                .Select(r => new
+                {
+                    r.Id,
+                    r.Name,
+                    r.Description,
+                    r.Address,
+                    r.Phone,
+                    r.IsSuspended,
+                    r.SuspensionReason,
+                    r.SuspendedAt
+                })
+                .ToListAsync();
+
+            return Ok(restaurants);
+        }
+
+        // =========================
         // RESTAURANT DASHBOARD
         // =========================
         [HttpGet("dashboard")]
@@ -212,7 +238,9 @@ namespace FoodDelivery.API.Controllers
         // UPDATE ORDER STATUS
         // =========================
         [HttpPut("update-order-status/{orderId}")]
-        public async Task<IActionResult> UpdateOrderStatus(int orderId, UpdateOrderStatusDto model)
+        public async Task<IActionResult> UpdateOrderStatus(
+            int orderId,
+            UpdateOrderStatusDto model)
         {
             var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -248,26 +276,5 @@ namespace FoodDelivery.API.Controllers
                 NewStatus = order.Status
             });
         }
-
-        // =========================
-// GET ALL RESTAURANTS (PUBLIC)
-// =========================
-[AllowAnonymous]
-[HttpGet("all")]
-public async Task<IActionResult> GetAllRestaurants()
-{
-    var restaurants = await _context.Restaurants
-        .Select(r => new
-        {
-            r.Id,
-            r.Name,
-            r.Description,
-            r.Address,
-            r.Phone
-        })
-        .ToListAsync();
-
-    return Ok(restaurants);
-}
     }
 }

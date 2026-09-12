@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -145,10 +144,11 @@ function AdminRestaurants() {
 
   if (loading) {
     return (
-      <div className="dashboard-page">
-        <div className="dashboard-card">
-          <h1>🏪 Restaurant Management</h1>
-          <p>Loading restaurants...</p>
+      <div className="admin-restaurants-page">
+        <div className="admin-page-loading">
+          <div className="admin-page-loading-icon">🏪</div>
+          <h2>Loading restaurants</h2>
+          <p>Please wait while we load restaurant information.</p>
         </div>
       </div>
     );
@@ -156,13 +156,17 @@ function AdminRestaurants() {
 
   if (error) {
     return (
-      <div className="dashboard-page">
-        <div className="dashboard-card">
-          <h1>🏪 Restaurant Management</h1>
+      <div className="admin-restaurants-page">
+        <div className="admin-page-error">
+          <div className="admin-page-error-icon">!</div>
+
+          <h2>Unable to load restaurants</h2>
+
           <p>{error}</p>
 
           <button
             type="button"
+            className="admin-primary-btn"
             onClick={() => navigate("/admin/dashboard")}
           >
             ← Back to Dashboard
@@ -179,220 +183,246 @@ function AdminRestaurants() {
   const activeCount = restaurants.length - suspendedCount;
 
   return (
-    <div
-      className="dashboard-page"
-      style={{
-        padding: "40px 20px",
-        maxWidth: "1200px",
-        margin: "0 auto",
-      }}
-    >
+    <div className="admin-restaurants-page">
       {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "15px",
-          marginBottom: "30px",
-        }}
-      >
+      <section className="admin-page-header">
         <div>
-          <h1>🏪 Restaurant Management</h1>
-          <p style={{ color: "#666" }}>
-            Manage and control all restaurants registered in the system.
+          <span className="admin-eyebrow">ADMINISTRATION</span>
+
+          <h1>Restaurant Management</h1>
+
+          <p>
+            Monitor, manage and control all restaurants registered
+            on your food delivery platform.
           </p>
         </div>
 
         <button
           type="button"
+          className="admin-back-btn"
           onClick={() => navigate("/admin/dashboard")}
         >
-          ← Dashboard
+          <span>←</span>
+          Dashboard
         </button>
-      </div>
+      </section>
 
-      {/* Restaurant Overview */}
-      <div
-        className="dashboard-card"
-        style={{
-          marginBottom: "25px",
-        }}
-      >
-        <h2>📊 Restaurant Overview</h2>
+      {/* Overview */}
+      <section className="restaurant-overview">
+        <div className="restaurant-overview-header">
+          <div>
+            <span className="section-eyebrow">OVERVIEW</span>
+            <h2>Restaurant Status</h2>
+          </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "30px",
-            flexWrap: "wrap",
-            marginTop: "15px",
-          }}
-        >
-          <p>
-            <strong>Total Restaurants:</strong> {restaurants.length}
-          </p>
-
-          <p>
-            <strong>Active:</strong> {activeCount}
-          </p>
-
-          <p>
-            <strong>Suspended:</strong> {suspendedCount}
-          </p>
+          <span className="restaurant-total-badge">
+            {restaurants.length} Total
+          </span>
         </div>
-      </div>
+
+        <div className="restaurant-overview-grid">
+          <div className="restaurant-overview-card overview-total">
+            <div className="overview-icon">🏪</div>
+
+            <div>
+              <span>Total Restaurants</span>
+              <strong>{restaurants.length}</strong>
+            </div>
+          </div>
+
+          <div className="restaurant-overview-card overview-active">
+            <div className="overview-icon">✓</div>
+
+            <div>
+              <span>Active Restaurants</span>
+              <strong>{activeCount}</strong>
+            </div>
+          </div>
+
+          <div className="restaurant-overview-card overview-suspended">
+            <div className="overview-icon">!</div>
+
+            <div>
+              <span>Suspended Restaurants</span>
+              <strong>{suspendedCount}</strong>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Restaurant List */}
-      {restaurants.length === 0 ? (
-        <div className="dashboard-card">
-          <h2>🏪 No Restaurants</h2>
-          <p>There are currently no registered restaurants.</p>
+      <section className="admin-restaurant-section">
+        <div className="admin-restaurant-section-heading">
+          <div>
+            <span className="section-eyebrow">RESTAURANTS</span>
+            <h2>Registered Restaurants</h2>
+          </div>
+
+          <p>
+            Review restaurant information and manage account status.
+          </p>
         </div>
-      ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit, minmax(300px, 1fr))",
-            gap: "20px",
-          }}
-        >
-          {restaurants.map((restaurant) => (
-            <div
-              className="dashboard-card"
-              key={restaurant.id}
-              style={{
-                position: "relative",
-                border: restaurant.isSuspended
-                  ? "2px solid #dc3545"
-                  : "1px solid #ddd",
-              }}
-            >
-              {/* Status */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: "15px",
-                  right: "15px",
-                  padding: "5px 10px",
-                  borderRadius: "20px",
-                  fontSize: "13px",
-                  fontWeight: "bold",
-                  backgroundColor: restaurant.isSuspended
-                    ? "#f8d7da"
-                    : "#d1e7dd",
-                  color: restaurant.isSuspended
-                    ? "#842029"
-                    : "#0f5132",
-                }}
+
+        {restaurants.length === 0 ? (
+          <div className="admin-empty-state">
+            <div className="admin-empty-icon">🏪</div>
+
+            <h2>No Restaurants</h2>
+
+            <p>
+              There are currently no registered restaurants in the
+              system.
+            </p>
+          </div>
+        ) : (
+          <div className="admin-restaurant-grid">
+            {restaurants.map((restaurant) => (
+              <article
+                className={`admin-restaurant-card ${
+                  restaurant.isSuspended
+                    ? "restaurant-suspended"
+                    : ""
+                }`}
+                key={restaurant.id}
               >
-                {restaurant.isSuspended ? "🔴 Suspended" : "🟢 Active"}
-              </div>
+                {/* Card Header */}
+                <div className="restaurant-card-header">
+                  <div className="restaurant-card-icon">
+                    🏪
+                  </div>
 
-              <h2 style={{ paddingRight: "100px" }}>
-                {restaurant.name}
-              </h2>
+                  <span
+                    className={`restaurant-status ${
+                      restaurant.isSuspended
+                        ? "status-suspended"
+                        : "status-active"
+                    }`}
+                  >
+                    <span className="status-indicator"></span>
 
-              <p>
-                <strong>Owner:</strong>{" "}
-                {restaurant.ownerName || "N/A"}
-              </p>
+                    {restaurant.isSuspended
+                      ? "Suspended"
+                      : "Active"}
+                  </span>
+                </div>
 
-              <p>
-                <strong>Address:</strong>{" "}
-                {restaurant.address || "N/A"}
-              </p>
+                {/* Restaurant Name */}
+                <div className="restaurant-card-title">
+                  <h3>{restaurant.name}</h3>
 
-              <p>
-                <strong>Phone:</strong>{" "}
-                {restaurant.phone || "N/A"}
-              </p>
+                  <span className="restaurant-id">
+                    Restaurant #{restaurant.id}
+                  </span>
+                </div>
 
-              <p>
-                <strong>Foods:</strong>{" "}
-                {restaurant.totalFoods ?? 0}
-              </p>
+                {/* Restaurant Information */}
+                <div className="restaurant-details">
+                  <div className="restaurant-detail-item">
+                    <span className="detail-icon">👤</span>
 
-              <p>
-                <strong>Average Rating:</strong>{" "}
-                ⭐ {restaurant.averageRating ?? 0}
-              </p>
+                    <div>
+                      <small>Owner</small>
+                      <strong>
+                        {restaurant.ownerName || "N/A"}
+                      </strong>
+                    </div>
+                  </div>
 
-              {/* Suspension Information */}
-              {restaurant.isSuspended && (
-                <div
-                  style={{
-                    marginTop: "15px",
-                    padding: "12px",
-                    backgroundColor: "#fff3cd",
-                    borderRadius: "6px",
-                    border: "1px solid #ffe69c",
-                  }}
-                >
-                  <p style={{ margin: "0 0 8px 0" }}>
-                    <strong>Suspension Reason:</strong>
-                  </p>
+                  <div className="restaurant-detail-item">
+                    <span className="detail-icon">📍</span>
 
-                  <p style={{ margin: 0 }}>
-                    {restaurant.suspensionReason ||
-                      "No reason provided."}
-                  </p>
+                    <div>
+                      <small>Address</small>
+                      <strong>
+                        {restaurant.address || "N/A"}
+                      </strong>
+                    </div>
+                  </div>
 
-                  {restaurant.suspendedAt && (
-                    <p
-                      style={{
-                        margin: "8px 0 0 0",
-                        fontSize: "13px",
-                        color: "#666",
-                      }}
-                    >
-                      Suspended:{" "}
-                      {new Date(
-                        restaurant.suspendedAt
-                      ).toLocaleString()}
+                  <div className="restaurant-detail-item">
+                    <span className="detail-icon">📞</span>
+
+                    <div>
+                      <small>Phone</small>
+                      <strong>
+                        {restaurant.phone || "N/A"}
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Restaurant Stats */}
+                <div className="restaurant-mini-stats">
+                  <div>
+                    <span>Foods</span>
+                    <strong>
+                      {restaurant.totalFoods ?? 0}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Rating</span>
+                    <strong>
+                      ⭐ {restaurant.averageRating ?? 0}
+                    </strong>
+                  </div>
+                </div>
+
+                {/* Suspension Information */}
+                {restaurant.isSuspended && (
+                  <div className="suspension-box">
+                    <div className="suspension-box-header">
+                      <span>⚠</span>
+                      <strong>Suspension Information</strong>
+                    </div>
+
+                    <p>
+                      {restaurant.suspensionReason ||
+                        "No reason provided."}
                     </p>
+
+                    {restaurant.suspendedAt && (
+                      <small>
+                        Suspended on{" "}
+                        {new Date(
+                          restaurant.suspendedAt
+                        ).toLocaleString()}
+                      </small>
+                    )}
+                  </div>
+                )}
+
+                {/* Action */}
+                <div className="restaurant-card-action">
+                  {restaurant.isSuspended ? (
+                    <button
+                      type="button"
+                      className="restaurant-action-btn unsuspend-btn"
+                      onClick={() =>
+                        handleUnsuspend(restaurant)
+                      }
+                    >
+                      <span>✓</span>
+                      Unsuspend Restaurant
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="restaurant-action-btn suspend-btn"
+                      onClick={() =>
+                        handleSuspend(restaurant)
+                      }
+                    >
+                      <span>🔒</span>
+                      Suspend Restaurant
+                    </button>
                   )}
                 </div>
-              )}
-
-              {/* Action */}
-              <div
-                style={{
-                  marginTop: "20px",
-                }}
-              >
-                {restaurant.isSuspended ? (
-                  <button
-                    type="button"
-                    onClick={() => handleUnsuspend(restaurant)}
-                    style={{
-                      width: "100%",
-                      backgroundColor: "#198754",
-                      color: "white",
-                    }}
-                  >
-                    🟢 Unsuspend Restaurant
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => handleSuspend(restaurant)}
-                    style={{
-                      width: "100%",
-                      backgroundColor: "#dc3545",
-                      color: "white",
-                    }}
-                  >
-                    🔒 Suspend Restaurant
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

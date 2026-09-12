@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
@@ -13,10 +14,6 @@ function Login() {
 
   const [loading, setLoading] = useState(false);
 
-  // =========================
-  // HANDLE INPUT
-  // =========================
-
   const handleChange = (e) => {
     setFormData((previous) => ({
       ...previous,
@@ -24,13 +21,8 @@ function Login() {
     }));
   };
 
-  // =========================
-  // LOGIN
-  // =========================
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setLoading(true);
 
     try {
@@ -57,29 +49,18 @@ function Login() {
         return;
       }
 
-      // =========================
-      // SAVE TOKEN
-      // =========================
-
       localStorage.setItem("token", token);
-
-      // =========================
-      // DECODE JWT
-      // =========================
 
       const decoded = jwtDecode(token);
 
       console.log("Decoded JWT:", decoded);
 
-      // ASP.NET Core Role claim
       const roleClaim =
         decoded[
           "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
         ];
 
-      // Backend also returns role directly
-      const role =
-        response.data.role || roleClaim;
+      const role = response.data.role || roleClaim;
 
       console.log("Logged in role:", role);
 
@@ -92,164 +73,178 @@ function Login() {
         return;
       }
 
-      // =========================
-      // ROLE-BASED REDIRECTION
-      // =========================
-
       if (role === "Admin") {
         navigate("/admin/dashboard");
-      }
-
-      else if (role === "RestaurantOwner") {
+      } else if (role === "RestaurantOwner") {
         navigate("/restaurant/dashboard");
-      }
-
-      else if (role === "DeliveryRider") {
+      } else if (role === "DeliveryRider") {
         navigate("/rider/dashboard");
-      }
-
-      else if (role === "Customer") {
+      } else if (role === "Customer") {
         navigate("/");
-      }
-
-      else {
+      } else {
         alert(`Unknown role: ${role}`);
         navigate("/");
       }
-
     } catch (error) {
       console.error("Login Error:", error);
 
-      console.error(
-        "Status:",
-        error.response?.status
-      );
+      console.error("Status:", error.response?.status);
+      console.error("Response:", error.response?.data);
 
-      console.error(
-        "Response:",
-        error.response?.data
-      );
-
-      let message =
-        "Invalid email or password.";
+      let message = "Invalid email or password.";
 
       if (typeof error.response?.data === "string") {
         message = error.response.data;
-      }
-
-      else if (error.response?.data?.message) {
-        message =
-          error.response.data.message;
+      } else if (error.response?.data?.message) {
+        message = error.response.data.message;
       }
 
       alert(message);
-
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-page">
+    <main className="auth-page">
+      <div className="auth-layout">
+        {/* Left Side */}
+        <section className="auth-brand-panel">
+          <div className="auth-brand-content">
+            <span className="auth-brand-badge">
+              FOOD DELIVERY
+            </span>
 
-      <div className="login-card">
+            <h1>
+              Your favorite food,
+              <br />
+              <span>just a few clicks away.</span>
+            </h1>
 
-        {/* ========================= */}
-        {/* HEADER */}
-        {/* ========================= */}
+            <p>
+              Discover restaurants, explore delicious meals and
+              enjoy convenient food delivery from one place.
+            </p>
 
-        <div className="login-header">
+            <div className="auth-features">
+              <div className="auth-feature">
+                <span>🍽️</span>
+                <div>
+                  <strong>Great food choices</strong>
+                  <small>Explore a variety of restaurants</small>
+                </div>
+              </div>
 
-          <h1>
-            🍔 Food Delivery
-          </h1>
+              <div className="auth-feature">
+                <span>⚡</span>
+                <div>
+                  <strong>Fast & convenient</strong>
+                  <small>Order without the hassle</small>
+                </div>
+              </div>
 
-          <p>
-            Login to your account
-          </p>
+              <div className="auth-feature">
+                <span>🔒</span>
+                <div>
+                  <strong>Secure experience</strong>
+                  <small>Your account stays protected</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-        </div>
+        {/* Login Side */}
+        <section className="auth-form-panel">
+          <div className="auth-card">
+            <div className="auth-header">
+              <div className="auth-logo">🍔</div>
 
+              <span className="auth-eyebrow">
+                WELCOME BACK
+              </span>
 
-        {/* ========================= */}
-        {/* LOGIN FORM */}
-        {/* ========================= */}
+              <h2>Sign in to your account</h2>
 
-        <form
-          onSubmit={handleSubmit}
-          className="login-form"
-          autoComplete="off"
-        >
+              <p>
+                Enter your details to continue.
+              </p>
+            </div>
 
-          {/* Email */}
+            <form
+              onSubmit={handleSubmit}
+              className="auth-form"
+              autoComplete="off"
+            >
+              <div className="auth-field">
+                <label htmlFor="email">Email address</label>
 
-          <label htmlFor="email">
-            Email
-          </label>
+                <input
+                  id="email"
+                  type="email"
+                  name="email"
+                  placeholder="you@example.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                  autoComplete="email"
+                  required
+                />
+              </div>
 
-          <input
-            id="email"
-            type="email"
-            name="email"
-            placeholder="Enter your email"
-            value={formData.email}
-            onChange={handleChange}
-            autoComplete="email"
-            required
-          />
+              <div className="auth-field">
+                <div className="auth-label-row">
+                  <label htmlFor="password">Password</label>
+                </div>
 
+                <input
+                  id="password"
+                  type="password"
+                  name="password"
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  autoComplete="current-password"
+                  required
+                />
+              </div>
 
-          {/* Password */}
+              <button
+                type="submit"
+                className="auth-submit-btn"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <span className="auth-spinner"></span>
+                    Signing in...
+                  </>
+                ) : (
+                  <>
+                    Sign In
+                    <span>→</span>
+                  </>
+                )}
+              </button>
+            </form>
 
-          <label htmlFor="password">
-            Password
-          </label>
+            <div className="auth-divider">
+              <span></span>
+              <small>OR</small>
+              <span></span>
+            </div>
 
-          <input
-            id="password"
-            type="password"
-            name="password"
-            placeholder="Enter your password"
-            value={formData.password}
-            onChange={handleChange}
-            autoComplete="current-password"
-            required
-          />
+            <div className="auth-register">
+              <p>Don't have an account?</p>
 
-
-          {/* Login Button */}
-
-          <button
-            type="submit"
-            disabled={loading}
-          >
-            {loading
-              ? "Logging in..."
-              : "Login"}
-          </button>
-
-        </form>
-
-
-        {/* ========================= */}
-        {/* REGISTER LINK */}
-        {/* ========================= */}
-
-        <div className="login-footer">
-
-          <p>
-            Don't have an account?{" "}
-
-            <Link to="/register">
-              Create Account
-            </Link>
-          </p>
-
-        </div>
-
+              <Link to="/register">
+                Create a new account
+                <span>→</span>
+              </Link>
+            </div>
+          </div>
+        </section>
       </div>
-
-    </div>
+    </main>
   );
 }
 

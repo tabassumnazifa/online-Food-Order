@@ -28,18 +28,29 @@ namespace FoodDelivery.API.Controllers
         [Authorize(Roles = Roles.Customer)]
         public async Task<IActionResult> CreateOrder(CreateOrderDto model)
         {
-            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var customerId = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(customerId))
             {
                 return Unauthorized();
             }
 
-            var restaurant = await _context.Restaurants.FindAsync(model.RestaurantId);
+            var restaurant = await _context.Restaurants
+                .FirstOrDefaultAsync(r => r.Id == model.RestaurantId);
 
             if (restaurant == null)
             {
                 return NotFound("Restaurant not found.");
+            }
+
+            // Prevent customers from ordering from suspended restaurants
+            if (restaurant.IsSuspended)
+            {
+                return BadRequest(
+                    $"This restaurant is currently suspended. " +
+                    $"Reason: {restaurant.SuspensionReason ?? "Not specified"}"
+                );
             }
 
             var order = new Order
@@ -52,9 +63,14 @@ namespace FoodDelivery.API.Controllers
             };
 
             _context.Orders.Add(order);
+
             await _context.SaveChangesAsync();
 
-            return Ok("Order created successfully.");
+            return Ok(new
+            {
+                Message = "Order created successfully.",
+                OrderId = order.Id
+            });
         }
 
         // =========================
@@ -116,7 +132,8 @@ namespace FoodDelivery.API.Controllers
         [Authorize(Roles = Roles.Customer)]
         public async Task<IActionResult> GetOrderHistory()
         {
-            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var customerId = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(customerId))
             {
@@ -144,9 +161,12 @@ namespace FoodDelivery.API.Controllers
         // UPDATE ORDER STATUS
         // =========================
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateOrder(int id, UpdateOrderDto model)
+        public async Task<IActionResult> UpdateOrder(
+            int id,
+            UpdateOrderDto model)
         {
-            var order = await _context.Orders.FindAsync(id);
+            var order = await _context.Orders
+                .FirstOrDefaultAsync(o => o.Id == id);
 
             if (order == null)
             {
@@ -166,7 +186,8 @@ namespace FoodDelivery.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOrder(int id)
         {
-            var order = await _context.Orders.FindAsync(id);
+            var order = await _context.Orders
+                .FirstOrDefaultAsync(o => o.Id == id);
 
             if (order == null)
             {
@@ -174,6 +195,7 @@ namespace FoodDelivery.API.Controllers
             }
 
             _context.Orders.Remove(order);
+
             await _context.SaveChangesAsync();
 
             return Ok("Order deleted successfully.");
@@ -186,23 +208,35 @@ namespace FoodDelivery.API.Controllers
         [Authorize(Roles = Roles.Customer)]
         public async Task<IActionResult> Checkout(CheckoutDto model)
         {
-            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var customerId = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(customerId))
             {
                 return Unauthorized();
             }
 
-            var restaurant = await _context.Restaurants.FindAsync(model.RestaurantId);
+            var restaurant = await _context.Restaurants
+                .FirstOrDefaultAsync(r => r.Id == model.RestaurantId);
 
             if (restaurant == null)
             {
                 return NotFound("Restaurant not found.");
             }
 
+            // Prevent checkout from suspended restaurants
+            if (restaurant.IsSuspended)
+            {
+                return BadRequest(
+                    $"This restaurant is currently suspended. " +
+                    $"Reason: {restaurant.SuspensionReason ?? "Not specified"}"
+                );
+            }
+
             var cartItems = await _context.CartItems
-                .Where(c => c.CustomerId == customerId &&
-                            c.Food!.RestaurantId == model.RestaurantId)
+                .Where(c =>
+                    c.CustomerId == customerId &&
+                    c.Food!.RestaurantId == model.RestaurantId)
                 .Include(c => c.Food)
                 .ToListAsync();
 
@@ -211,7 +245,8 @@ namespace FoodDelivery.API.Controllers
                 return BadRequest("Your cart is empty.");
             }
 
-            decimal totalAmount = cartItems.Sum(c => c.Food!.Price * c.Quantity);
+            decimal totalAmount = cartItems.Sum(
+                c => c.Food!.Price * c.Quantity);
 
             var order = new Order
             {
@@ -223,6 +258,7 @@ namespace FoodDelivery.API.Controllers
             };
 
             _context.Orders.Add(order);
+
             await _context.SaveChangesAsync();
 
             foreach (var cartItem in cartItems)

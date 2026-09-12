@@ -42,7 +42,11 @@ function Navbar() {
       {/* =========================
           LOGO
       ========================= */}
-      <h2 className="logo">
+      <h2
+        className="logo"
+        onClick={() => navigate("/")}
+        style={{ cursor: "pointer" }}
+      >
         🍔 Food Delivery
       </h2>
 
@@ -97,6 +101,10 @@ function Navbar() {
             <NavLink to="/offers">
               🎁 Offers
             </NavLink>
+
+            <NavLink to="/privacy-security">
+              🔐 Privacy & Security
+            </NavLink>
           </>
         )}
 
@@ -104,9 +112,19 @@ function Navbar() {
             RESTAURANT OWNER
         ========================= */}
         {token && role === "RestaurantOwner" && (
-          <NavLink to="/restaurant/dashboard">
-            Dashboard
-          </NavLink>
+          <>
+            <NavLink to="/restaurant/dashboard">
+              Dashboard
+            </NavLink>
+
+            <NavLink to="/restaurant/foods">
+              Foods
+            </NavLink>
+
+            <NavLink to="/restaurant/orders">
+              Orders
+            </NavLink>
+          </>
         )}
 
         {/* =========================
@@ -119,12 +137,18 @@ function Navbar() {
         )}
 
         {/* =========================
-            RIDER
+            DELIVERY RIDER
         ========================= */}
-        {token && role === "Rider" && (
-          <NavLink to="/rider/dashboard">
-            Rider
-          </NavLink>
+        {token && role === "DeliveryRider" && (
+          <>
+            <NavLink to="/rider/dashboard">
+              Dashboard
+            </NavLink>
+
+            <NavLink to="/rider/available-orders">
+              Available Orders
+            </NavLink>
+          </>
         )}
 
         {/* =========================
@@ -146,4 +170,3 @@ function Navbar() {
 }
 
 export default Navbar;
-

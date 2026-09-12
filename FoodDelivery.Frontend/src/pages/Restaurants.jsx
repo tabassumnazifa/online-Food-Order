@@ -42,6 +42,8 @@ function Restaurants() {
             description={restaurant.description}
             rating={restaurant.rating ?? 4.5}
             location={restaurant.address}
+            isSuspended={restaurant.isSuspended}
+            suspensionReason={restaurant.suspensionReason}
           />
         ))
       )}
