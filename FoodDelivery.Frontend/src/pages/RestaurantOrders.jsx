@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -5,6 +6,7 @@ function RestaurantOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [updating, setUpdating] = useState(null);
 
   const token = localStorage.getItem("token");
 
@@ -15,6 +17,7 @@ function RestaurantOrders() {
   // =========================
   // FETCH RESTAURANT ORDERS
   // =========================
+
   const fetchOrders = async () => {
     if (!token) {
       setError("Please login first.");
@@ -58,10 +61,101 @@ function RestaurantOrders() {
   };
 
   // =========================
+  // GET CURRENT STATUS
+  // =========================
+
+  const getCurrentStatus = (status) => {
+    if (!status) {
+      return "Pending";
+    }
+
+    const normalized = status.toLowerCase();
+
+    switch (normalized) {
+      case "pending":
+        return "Pending";
+
+      case "accepted":
+        return "Accepted";
+
+      case "preparing":
+        return "Preparing";
+
+      case "readyforpickup":
+        return "ReadyForPickup";
+
+      case "outfordelivery":
+        return "OutForDelivery";
+
+      case "delivered":
+        return "Delivered";
+
+      case "cancelled":
+        return "Cancelled";
+
+      default:
+        return status;
+    }
+  };
+
+  // =========================
+  // GET ALLOWED NEXT STATUSES
+  // =========================
+
+  const getAllowedStatuses = (status) => {
+    switch (status?.toLowerCase()) {
+      case "pending":
+        return ["Pending", "Accepted"];
+
+      case "accepted":
+        return ["Accepted", "Preparing"];
+
+      case "preparing":
+        return ["Preparing", "ReadyForPickup"];
+
+      case "readyforpickup":
+        return ["ReadyForPickup"];
+
+      case "outfordelivery":
+        return ["OutForDelivery"];
+
+      case "delivered":
+        return ["Delivered"];
+
+      case "cancelled":
+        return ["Cancelled"];
+
+      default:
+        return [status];
+    }
+  };
+
+  // =========================
+  // CHECK IF RESTAURANT CAN UPDATE
+  // =========================
+
+  const canUpdateStatus = (status) => {
+    const normalized = status?.toLowerCase();
+
+    return (
+      normalized === "pending" ||
+      normalized === "accepted" ||
+      normalized === "preparing"
+    );
+  };
+
+  // =========================
   // UPDATE ORDER STATUS
   // =========================
+
   const updateOrderStatus = async (orderId, status) => {
+    if (!status) {
+      return;
+    }
+
     try {
+      setUpdating(orderId);
+
       await axios.put(
         `http://localhost:5079/api/Restaurant/update-order-status/${orderId}`,
         {
@@ -77,7 +171,7 @@ function RestaurantOrders() {
 
       alert("Order status updated successfully.");
 
-      fetchOrders();
+      await fetchOrders();
     } catch (error) {
       console.error("Update Status Error:", error);
 
@@ -86,12 +180,32 @@ function RestaurantOrders() {
           error.response?.data ||
           "Failed to update order status."
       );
+
+      await fetchOrders();
+    } finally {
+      setUpdating(null);
     }
+  };
+
+  // =========================
+  // FORMAT STATUS
+  // =========================
+
+  const formatStatus = (status) => {
+    if (!status) {
+      return "Unknown";
+    }
+
+    return status
+      .replace(/([A-Z])/g, " $1")
+      .replace(/^./, (char) => char.toUpperCase())
+      .trim();
   };
 
   // =========================
   // LOADING
   // =========================
+
   if (loading) {
     return (
       <div className="container">
@@ -104,11 +218,17 @@ function RestaurantOrders() {
   // =========================
   // ERROR
   // =========================
+
   if (error) {
     return (
       <div className="container">
         <h1>📦 Restaurant Orders</h1>
+
         <p>{error}</p>
+
+        <button type="button" onClick={fetchOrders}>
+          Try Again
+        </button>
       </div>
     );
   }
@@ -116,106 +236,149 @@ function RestaurantOrders() {
   // =========================
   // PAGE
   // =========================
+
   return (
     <div className="container">
-
       <h1>📦 Restaurant Orders</h1>
 
       {orders.length === 0 ? (
         <p>No orders found.</p>
       ) : (
         <div className="orders-list">
+          {orders.map((order) => {
+            const currentStatus = getCurrentStatus(order.status);
 
-          {orders.map((order) => (
-            <div
-              className="order-card"
-              key={order.orderId}
-            >
+            const allowedStatuses =
+              getAllowedStatuses(order.status);
 
-              <h2>
-                Order #{order.orderId}
-              </h2>
+            const restaurantCanUpdate =
+              canUpdateStatus(order.status);
 
-              <p>
-                <strong>Customer ID:</strong>{" "}
-                {order.customerId}
-              </p>
+            return (
+              <div
+                className="order-card"
+                key={order.orderId}
+              >
+                <h2>Order #{order.orderId}</h2>
 
-              <p>
-                <strong>Date:</strong>{" "}
-                {new Date(
-                  order.orderDate
-                ).toLocaleString()}
-              </p>
+                <p>
+                  <strong>Customer ID:</strong>{" "}
+                  {order.customerId}
+                </p>
 
-              <p>
-                <strong>Total:</strong>{" "}
-                ৳{order.totalAmount}
-              </p>
+                <p>
+                  <strong>Date:</strong>{" "}
+                  {new Date(
+                    order.orderDate
+                  ).toLocaleString()}
+                </p>
 
-              <p>
-                <strong>Status:</strong>{" "}
-                {order.status}
-              </p>
+                <p>
+                  <strong>Total:</strong>{" "}
+                  ৳
+                  {Number(
+                    order.totalAmount || 0
+                  ).toFixed(2)}
+                </p>
 
-              {/* ========================= */}
-              {/* STATUS UPDATE */}
-              {/* ========================= */}
+                {/* =========================
+                    STATUS DROPDOWN
+                    ========================= */}
 
-              <div className="order-status-control">
+                <div className="order-status-control">
+                  <label
+                    htmlFor={`status-${order.orderId}`}
+                  >
+                    <strong>Order Status:</strong>
+                  </label>
 
-                <label>
-                  Update Status:
-                </label>
+                  <select
+                    id={`status-${order.orderId}`}
+                    value={currentStatus}
+                    disabled={
+                      !restaurantCanUpdate ||
+                      updating === order.orderId
+                    }
+                    onChange={(e) => {
+                      const newStatus = e.target.value;
 
-                <select
-                  value={order.status}
-                  onChange={(e) =>
-                    updateOrderStatus(
-                      order.orderId,
-                      e.target.value
-                    )
-                  }
-                >
+                      if (
+                        newStatus &&
+                        newStatus !== currentStatus
+                      ) {
+                        updateOrderStatus(
+                          order.orderId,
+                          newStatus
+                        );
+                      }
+                    }}
+                  >
+                    {allowedStatuses.map((status) => (
+                      <option
+                        key={status}
+                        value={status}
+                      >
+                        {formatStatus(status)}
+                      </option>
+                    ))}
+                  </select>
 
-                  <option value="Placed">
-                    Placed
-                  </option>
+                  {updating === order.orderId && (
+                    <span className="status-updating">
+                      Updating...
+                    </span>
+                  )}
+                </div>
 
-                  <option value="Confirmed">
-                    Confirmed
-                  </option>
+                {/* =========================
+                    READY FOR PICKUP
+                    ========================= */}
 
-                  <option value="Preparing">
-                    Preparing
-                  </option>
+                {currentStatus.toLowerCase() ===
+                  "readyforpickup" && (
+                  <div className="order-status-message">
+                    🛵 Ready for pickup — waiting for a
+                    delivery rider.
+                  </div>
+                )}
 
-                  <option value="Ready">
-                    Ready
-                  </option>
+                {/* =========================
+                    OUT FOR DELIVERY
+                    ========================= */}
 
-                  <option value="PickedUp">
-                    Picked Up
-                  </option>
+                {currentStatus.toLowerCase() ===
+                  "outfordelivery" && (
+                  <div className="order-status-message">
+                    🛵 Order is out for delivery.
+                  </div>
+                )}
 
-                  <option value="Delivered">
-                    Delivered
-                  </option>
+                {/* =========================
+                    DELIVERED
+                    ========================= */}
 
-                  <option value="Cancelled">
-                    Cancelled
-                  </option>
+                {currentStatus.toLowerCase() ===
+                  "delivered" && (
+                  <div className="order-status-message">
+                    ✅ Order delivered successfully.
+                  </div>
+                )}
 
-                </select>
+                {/* =========================
+                    CANCELLED
+                    ========================= */}
 
+                {currentStatus.toLowerCase() ===
+                  "cancelled" && (
+                  <div className="order-status-message">
+                    ❌ Order cancelled.
+                  </div>
+                )}
               </div>
-
-            </div>
-          ))}
-
+            );
+          })}
         </div>
       )}
-
     </div>
   );
 }

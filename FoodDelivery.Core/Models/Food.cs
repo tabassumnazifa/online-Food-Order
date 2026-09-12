@@ -8,7 +8,6 @@ namespace FoodDelivery.Core.Models
         [Key]
         public int Id { get; set; }
 
-
         // =========================
         // FOOD INFORMATION
         // =========================
@@ -17,18 +16,13 @@ namespace FoodDelivery.Core.Models
         [MaxLength(100)]
         public string Name { get; set; } = string.Empty;
 
-
         [MaxLength(500)]
         public string? Description { get; set; }
-
 
         [Column(TypeName = "decimal(10,2)")]
         public decimal Price { get; set; }
 
-
         public bool IsAvailable { get; set; } = true;
-
-
 
         // =========================
         // RESTAURANT RELATION
@@ -37,24 +31,8 @@ namespace FoodDelivery.Core.Models
         [Required]
         public int RestaurantId { get; set; }
 
-
         [ForeignKey(nameof(RestaurantId))]
         public Restaurant? Restaurant { get; set; }
-
-
-
-        // =========================
-        // CATEGORY RELATION
-        // =========================
-
-        [Required]
-        public int CategoryId { get; set; }
-
-
-        [ForeignKey(nameof(CategoryId))]
-        public Category? Category { get; set; }
-
-
 
         // =========================
         // ORDER ITEMS

@@ -1,10 +1,8 @@
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 
 function ManageFoods() {
   const [foods, setFoods] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [restaurantId, setRestaurantId] = useState(null);
 
   const [loading, setLoading] = useState(true);
@@ -19,7 +17,6 @@ function ManageFoods() {
     description: "",
     price: "",
     isAvailable: true,
-    categoryId: "",
   });
 
   const token = localStorage.getItem("token");
@@ -30,14 +27,18 @@ function ManageFoods() {
     },
   };
 
+  // ==========================================
+  // INITIAL LOAD
+  // ==========================================
+
   useEffect(() => {
     loadRestaurantAndFoods();
-    loadCategories();
   }, []);
 
-  // ================================
+  // ==========================================
   // LOAD RESTAURANT + FOODS
-  // ================================
+  // ==========================================
+
   const loadRestaurantAndFoods = async () => {
     try {
       setLoading(true);
@@ -57,7 +58,7 @@ function ManageFoods() {
         authConfig
       );
 
-      setFoods(foodResponse.data);
+      setFoods(foodResponse.data || []);
     } catch (error) {
       console.error("Food loading error:", error);
 
@@ -70,25 +71,10 @@ function ManageFoods() {
     }
   };
 
-  // ================================
-  // LOAD CATEGORIES
-  // ================================
-  const loadCategories = async () => {
-    try {
-      const response = await axios.get(
-        "http://localhost:5079/api/Category",
-        authConfig
-      );
-
-      setCategories(response.data);
-    } catch (error) {
-      console.error("Category loading error:", error);
-    }
-  };
-
-  // ================================
+  // ==========================================
   // HANDLE INPUT
-  // ================================
+  // ==========================================
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -98,32 +84,34 @@ function ManageFoods() {
     }));
   };
 
-  // ================================
+  // ==========================================
   // RESET FORM
-  // ================================
+  // ==========================================
+
   const resetForm = () => {
     setFormData({
       name: "",
       description: "",
       price: "",
       isAvailable: true,
-      categoryId: "",
     });
 
     setEditingFoodId(null);
   };
 
-  // ================================
+  // ==========================================
   // OPEN ADD FORM
-  // ================================
+  // ==========================================
+
   const openAddForm = () => {
     resetForm();
     setShowForm(true);
   };
 
-  // ================================
+  // ==========================================
   // OPEN EDIT FORM
-  // ================================
+  // ==========================================
+
   const openEditForm = (food) => {
     setEditingFoodId(food.id);
 
@@ -132,7 +120,6 @@ function ManageFoods() {
       description: food.description || "",
       price: food.price || "",
       isAvailable: food.isAvailable,
-      categoryId: food.categoryId || "",
     });
 
     setShowForm(true);
@@ -143,17 +130,19 @@ function ManageFoods() {
     });
   };
 
-  // ================================
+  // ==========================================
   // CLOSE FORM
-  // ================================
+  // ==========================================
+
   const closeForm = () => {
     setShowForm(false);
     resetForm();
   };
 
-  // ================================
+  // ==========================================
   // ADD / UPDATE FOOD
-  // ================================
+  // ==========================================
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -162,8 +151,13 @@ function ManageFoods() {
       return;
     }
 
-    if (!formData.categoryId) {
-      alert("Please select a category.");
+    if (!formData.name.trim()) {
+      alert("Please enter a food name.");
+      return;
+    }
+
+    if (!formData.price || Number(formData.price) <= 0) {
+      alert("Please enter a valid price.");
       return;
     }
 
@@ -176,7 +170,6 @@ function ManageFoods() {
         price: Number(formData.price),
         isAvailable: formData.isAvailable,
         restaurantId: restaurantId,
-        categoryId: Number(formData.categoryId),
       };
 
       if (editingFoodId) {
@@ -212,9 +205,10 @@ function ManageFoods() {
     }
   };
 
-  // ================================
+  // ==========================================
   // DELETE FOOD
-  // ================================
+  // ==========================================
+
   const handleDelete = async (foodId) => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this food?"
@@ -243,18 +237,27 @@ function ManageFoods() {
     }
   };
 
+  // ==========================================
+  // STATISTICS
+  // ==========================================
+
   const availableCount = foods.filter(
     (food) => food.isAvailable
   ).length;
 
-  const unavailableCount = foods.length - availableCount;
+  const unavailableCount =
+    foods.length - availableCount;
+
+  // ==========================================
+  // RENDER
+  // ==========================================
 
   return (
     <div className="manage-foods-page">
 
-      {/* ================================
+      {/* ==========================================
           PAGE HEADER
-      ================================= */}
+      ========================================== */}
 
       <div className="manage-foods-header">
         <div>
@@ -280,13 +283,14 @@ function ManageFoods() {
         </button>
       </div>
 
-      {/* ================================
+      {/* ==========================================
           STATISTICS
-      ================================= */}
+      ========================================== */}
 
       {!loading && !error && (
         <div className="food-stats">
 
+          {/* Total Foods */}
           <div className="food-stat-card">
             <div className="food-stat-icon green">
               🍽️
@@ -294,10 +298,12 @@ function ManageFoods() {
 
             <div>
               <span>Total Foods</span>
+
               <strong>{foods.length}</strong>
             </div>
           </div>
 
+          {/* Available */}
           <div className="food-stat-card">
             <div className="food-stat-icon orange">
               ✓
@@ -305,10 +311,12 @@ function ManageFoods() {
 
             <div>
               <span>Available</span>
+
               <strong>{availableCount}</strong>
             </div>
           </div>
 
+          {/* Unavailable */}
           <div className="food-stat-card">
             <div className="food-stat-icon gray">
               ◷
@@ -316,27 +324,17 @@ function ManageFoods() {
 
             <div>
               <span>Unavailable</span>
+
               <strong>{unavailableCount}</strong>
-            </div>
-          </div>
-
-          <div className="food-stat-card">
-            <div className="food-stat-icon blue">
-              📂
-            </div>
-
-            <div>
-              <span>Categories</span>
-              <strong>{categories.length}</strong>
             </div>
           </div>
 
         </div>
       )}
 
-      {/* ================================
+      {/* ==========================================
           ADD / EDIT FORM
-      ================================= */}
+      ========================================== */}
 
       {showForm && (
         <div className="food-form-card">
@@ -375,9 +373,9 @@ function ManageFoods() {
             className="food-form"
             onSubmit={handleSubmit}
           >
-
             <div className="food-form-grid">
 
+              {/* Food Name */}
               <div className="food-form-field">
                 <label>
                   Food Name
@@ -393,6 +391,7 @@ function ManageFoods() {
                 />
               </div>
 
+              {/* Price */}
               <div className="food-form-field">
                 <label>
                   Price
@@ -413,32 +412,7 @@ function ManageFoods() {
                 </div>
               </div>
 
-              <div className="food-form-field">
-                <label>
-                  Category
-                </label>
-
-                <select
-                  name="categoryId"
-                  value={formData.categoryId}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">
-                    Select Category
-                  </option>
-
-                  {categories.map((category) => (
-                    <option
-                      key={category.id}
-                      value={category.id}
-                    >
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
+              {/* Availability */}
               <div className="food-form-field food-availability-field">
                 <label>
                   Availability
@@ -460,6 +434,7 @@ function ManageFoods() {
                 </label>
               </div>
 
+              {/* Description */}
               <div className="food-form-field full-width">
                 <label>
                   Description
@@ -477,6 +452,7 @@ function ManageFoods() {
 
             </div>
 
+            {/* Form Actions */}
             <div className="food-form-actions">
 
               <button
@@ -500,21 +476,23 @@ function ManageFoods() {
               </button>
 
             </div>
-
           </form>
         </div>
       )}
 
-      {/* ================================
+      {/* ==========================================
           ERROR
-      ================================= */}
+      ========================================== */}
 
       {error && (
         <div className="foods-error">
           <span>⚠️</span>
 
           <div>
-            <strong>Unable to load foods</strong>
+            <strong>
+              Unable to load foods
+            </strong>
+
             <p>{error}</p>
           </div>
 
@@ -527,15 +505,17 @@ function ManageFoods() {
         </div>
       )}
 
-      {/* ================================
+      {/* ==========================================
           LOADING
-      ================================= */}
+      ========================================== */}
 
       {loading && (
         <div className="foods-loading">
           <div className="loading-spinner"></div>
 
-          <h3>Loading your menu...</h3>
+          <h3>
+            Loading your menu...
+          </h3>
 
           <p>
             Please wait while we fetch your food items.
@@ -543,9 +523,9 @@ function ManageFoods() {
         </div>
       )}
 
-      {/* ================================
+      {/* ==========================================
           EMPTY STATE
-      ================================= */}
+      ========================================== */}
 
       {!loading &&
         !error &&
@@ -581,9 +561,9 @@ function ManageFoods() {
           </div>
         )}
 
-      {/* ================================
+      {/* ==========================================
           FOOD LIST
-      ================================= */}
+      ========================================== */}
 
       {!loading &&
         !error &&
@@ -617,7 +597,9 @@ function ManageFoods() {
                   key={food.id}
                 >
 
+                  {/* Food Image / Icon */}
                   <div className="food-card-image">
+
                     <span>🍴</span>
 
                     <div
@@ -633,17 +615,13 @@ function ManageFoods() {
                         ? "Available"
                         : "Unavailable"}
                     </div>
+
                   </div>
 
+                  {/* Food Information */}
                   <div className="food-card-body">
 
                     <div className="food-card-top">
-                      <span className="food-category">
-                        📂{" "}
-                        {food.categoryName ||
-                          "Uncategorized"}
-                      </span>
-
                       <span className="food-price">
                         ৳{food.price}
                       </span>
@@ -683,7 +661,6 @@ function ManageFoods() {
                     </div>
 
                   </div>
-
                 </article>
               ))}
 

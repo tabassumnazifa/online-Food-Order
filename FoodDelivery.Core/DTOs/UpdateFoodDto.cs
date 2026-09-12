@@ -15,8 +15,5 @@ namespace FoodDelivery.Core.DTOs
         public decimal Price { get; set; }
 
         public bool IsAvailable { get; set; }
-
-        [Required]
-        public int CategoryId { get; set; }
     }
 }

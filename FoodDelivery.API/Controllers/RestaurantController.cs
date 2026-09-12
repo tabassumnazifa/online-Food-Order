@@ -26,9 +26,11 @@ namespace FoodDelivery.API.Controllers
         // CREATE RESTAURANT
         // =========================
         [HttpPost("create")]
-        public async Task<IActionResult> CreateRestaurant(CreateRestaurantDto model)
+        public async Task<IActionResult> CreateRestaurant(
+            CreateRestaurantDto model)
         {
-            var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var ownerId = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(ownerId))
                 return Unauthorized();
@@ -38,7 +40,8 @@ namespace FoodDelivery.API.Controllers
 
             if (existingRestaurant)
             {
-                return BadRequest("You have already created a restaurant.");
+                return BadRequest(
+                    "You have already created a restaurant.");
             }
 
             var restaurant = new Restaurant
@@ -51,6 +54,7 @@ namespace FoodDelivery.API.Controllers
             };
 
             _context.Restaurants.Add(restaurant);
+
             await _context.SaveChangesAsync();
 
             return Ok(new
@@ -63,9 +67,11 @@ namespace FoodDelivery.API.Controllers
         // UPDATE RESTAURANT
         // =========================
         [HttpPut("update")]
-        public async Task<IActionResult> UpdateRestaurant(UpdateRestaurantDto model)
+        public async Task<IActionResult> UpdateRestaurant(
+            UpdateRestaurantDto model)
         {
-            var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var ownerId = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(ownerId))
                 return Unauthorized();
@@ -97,7 +103,8 @@ namespace FoodDelivery.API.Controllers
         [HttpGet("my-restaurant")]
         public async Task<IActionResult> GetMyRestaurant()
         {
-            var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var ownerId = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(ownerId))
                 return Unauthorized();
@@ -140,7 +147,12 @@ namespace FoodDelivery.API.Controllers
                     r.Phone,
                     r.IsSuspended,
                     r.SuspensionReason,
-                    r.SuspendedAt
+                    r.SuspendedAt,
+
+                    Rating = _context.Feedbacks
+                        .Where(f => f.RestaurantId == r.Id)
+                        .Select(f => (double?)f.Rating)
+                        .Average() ?? 0
                 })
                 .ToListAsync();
 
@@ -153,7 +165,8 @@ namespace FoodDelivery.API.Controllers
         [HttpGet("dashboard")]
         public async Task<IActionResult> GetDashboard()
         {
-            var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var ownerId = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(ownerId))
                 return Unauthorized();
@@ -171,29 +184,29 @@ namespace FoodDelivery.API.Controllers
                 RestaurantName = restaurant.Name,
 
                 TotalFoods = await _context.Foods
-                    .CountAsync(f => f.RestaurantId == restaurant.Id),
-
-                TotalCategories = await _context.Foods
-                    .Where(f => f.RestaurantId == restaurant.Id)
-                    .Select(f => f.CategoryId)
-                    .Distinct()
-                    .CountAsync(),
+                    .CountAsync(f =>
+                        f.RestaurantId == restaurant.Id),
 
                 TotalOrders = await _context.Orders
-                    .CountAsync(o => o.RestaurantId == restaurant.Id),
+                    .CountAsync(o =>
+                        o.RestaurantId == restaurant.Id),
 
                 PendingOrders = await _context.Orders
-                    .CountAsync(o => o.RestaurantId == restaurant.Id &&
-                                     o.Status == "Placed"),
+                    .CountAsync(o =>
+                        o.RestaurantId == restaurant.Id &&
+                        o.OrderStatus == OrderStatus.Pending),
 
                 CompletedOrders = await _context.Orders
-                    .CountAsync(o => o.RestaurantId == restaurant.Id &&
-                                     o.Status == "Delivered"),
+                    .CountAsync(o =>
+                        o.RestaurantId == restaurant.Id &&
+                        o.OrderStatus == OrderStatus.Delivered),
 
                 TotalRevenue = await _context.Orders
-                    .Where(o => o.RestaurantId == restaurant.Id &&
-                                o.Status == "Delivered")
-                    .SumAsync(o => (decimal?)o.TotalAmount) ?? 0
+                    .Where(o =>
+                        o.RestaurantId == restaurant.Id &&
+                        o.OrderStatus == OrderStatus.Delivered)
+                    .SumAsync(o =>
+                        (decimal?)o.TotalAmount) ?? 0
             };
 
             return Ok(dashboard);
@@ -205,7 +218,8 @@ namespace FoodDelivery.API.Controllers
         [HttpGet("my-orders")]
         public async Task<IActionResult> GetMyOrders()
         {
-            var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var ownerId = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(ownerId))
                 return Unauthorized();
@@ -219,7 +233,8 @@ namespace FoodDelivery.API.Controllers
             }
 
             var orders = await _context.Orders
-                .Where(o => o.RestaurantId == restaurant.Id)
+                .Where(o =>
+                    o.RestaurantId == restaurant.Id)
                 .OrderByDescending(o => o.OrderDate)
                 .Select(o => new RestaurantOrderDto
                 {
@@ -227,7 +242,7 @@ namespace FoodDelivery.API.Controllers
                     CustomerId = o.CustomerId,
                     OrderDate = o.OrderDate,
                     TotalAmount = o.TotalAmount,
-                    Status = o.Status
+                    Status = o.OrderStatus.ToString()
                 })
                 .ToListAsync();
 
@@ -242,7 +257,8 @@ namespace FoodDelivery.API.Controllers
             int orderId,
             UpdateOrderStatusDto model)
         {
-            var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var ownerId = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(ownerId))
                 return Unauthorized();
@@ -265,7 +281,54 @@ namespace FoodDelivery.API.Controllers
                 return NotFound("Order not found.");
             }
 
-            order.Status = model.Status;
+            if (model == null || string.IsNullOrWhiteSpace(model.Status))
+            {
+                return BadRequest("Order status is required.");
+            }
+
+            if (!Enum.TryParse<OrderStatus>(
+                    model.Status,
+                    true,
+                    out var newStatus))
+            {
+                return BadRequest(
+                    $"Invalid order status: '{model.Status}'.");
+            }
+
+            // =========================
+            // RESTAURANT STATUS FLOW
+            // =========================
+            //
+            // Pending
+            //    ↓
+            // Accepted
+            //    ↓
+            // Preparing
+            //    ↓
+            // ReadyForPickup
+            //
+            // After ReadyForPickup, the
+            // delivery rider handles the rest.
+            // =========================
+
+            var validTransition =
+                (order.OrderStatus == OrderStatus.Pending &&
+                 newStatus == OrderStatus.Accepted) ||
+
+                (order.OrderStatus == OrderStatus.Accepted &&
+                 newStatus == OrderStatus.Preparing) ||
+
+                (order.OrderStatus == OrderStatus.Preparing &&
+                 newStatus == OrderStatus.ReadyForPickup);
+
+            if (!validTransition)
+            {
+                return BadRequest(
+                    $"Cannot change restaurant order status " +
+                    $"from '{order.OrderStatus}' to '{newStatus}'.");
+            }
+
+            order.OrderStatus = newStatus;
 
             await _context.SaveChangesAsync();
 
@@ -273,7 +336,7 @@ namespace FoodDelivery.API.Controllers
             {
                 Message = "Order status updated successfully.",
                 OrderId = order.Id,
-                NewStatus = order.Status
+                NewStatus = order.OrderStatus.ToString()
             });
         }
     }

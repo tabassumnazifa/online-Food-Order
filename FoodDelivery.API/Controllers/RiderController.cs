@@ -1,3 +1,4 @@
+
 using FoodDelivery.Core.DTOs;
 using FoodDelivery.Core.Enums;
 using FoodDelivery.Infrastructure.Data;
@@ -23,10 +24,13 @@ namespace FoodDelivery.API.Controllers
         // =========================
         // RIDER DASHBOARD
         // =========================
+
         [HttpGet("dashboard")]
         public async Task<IActionResult> GetDashboard()
         {
-            var riderId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var riderId = User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            );
 
             if (string.IsNullOrEmpty(riderId))
             {
@@ -35,25 +39,30 @@ namespace FoodDelivery.API.Controllers
 
             var dashboard = new RiderDashboardDto
             {
+                // Orders waiting for a rider
                 AvailableOrders = await _context.Orders
                     .CountAsync(o =>
                         o.RiderId == null &&
-                        o.Status == "Placed"),
+                        o.OrderStatus == OrderStatus.ReadyForPickup),
 
+                // Rider's active deliveries
                 ActiveOrders = await _context.Orders
                     .CountAsync(o =>
                         o.RiderId == riderId &&
-                        o.Status != "Delivered"),
+                        o.OrderStatus != OrderStatus.Delivered &&
+                        o.OrderStatus != OrderStatus.Cancelled),
 
+                // Completed deliveries
                 CompletedOrders = await _context.Orders
                     .CountAsync(o =>
                         o.RiderId == riderId &&
-                        o.Status == "Delivered"),
+                        o.OrderStatus == OrderStatus.Delivered),
 
+                // Total deliveries
                 TotalDeliveries = await _context.Orders
                     .CountAsync(o =>
                         o.RiderId == riderId &&
-                        o.Status == "Delivered")
+                        o.OrderStatus == OrderStatus.Delivered)
             };
 
             return Ok(dashboard);
@@ -62,13 +71,14 @@ namespace FoodDelivery.API.Controllers
         // =========================
         // AVAILABLE ORDERS
         // =========================
+
         [HttpGet("available-orders")]
         public async Task<IActionResult> GetAvailableOrders()
         {
             var orders = await _context.Orders
                 .Where(o =>
                     o.RiderId == null &&
-                    o.Status == "Placed")
+                    o.OrderStatus == OrderStatus.ReadyForPickup)
                 .Include(o => o.Restaurant)
                 .OrderByDescending(o => o.OrderDate)
                 .Select(o => new AvailableOrderDto
@@ -77,7 +87,7 @@ namespace FoodDelivery.API.Controllers
                     RestaurantName = o.Restaurant!.Name,
                     RestaurantAddress = o.Restaurant.Address,
                     TotalAmount = o.TotalAmount,
-                    Status = o.Status,
+                    Status = o.OrderStatus.ToString(),
                     OrderDate = o.OrderDate
                 })
                 .ToListAsync();
@@ -86,12 +96,15 @@ namespace FoodDelivery.API.Controllers
         }
 
         // =========================
-        // ACCEPT ORDER
+        // RIDER ACCEPTS DELIVERY
         // =========================
+
         [HttpPut("accept-order/{orderId}")]
         public async Task<IActionResult> AcceptOrder(int orderId)
         {
-            var riderId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var riderId = User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            );
 
             if (string.IsNullOrEmpty(riderId))
             {
@@ -106,36 +119,50 @@ namespace FoodDelivery.API.Controllers
                 return NotFound("Order not found.");
             }
 
+            // Make sure another rider has not already taken it
             if (order.RiderId != null)
             {
-                return BadRequest("This order is already assigned.");
+                return BadRequest(
+                    "This order is already assigned to another rider."
+                );
             }
 
-            if (order.Status != "Placed")
+            // Rider can only accept orders that are
+            // ready for pickup.
+            if (order.OrderStatus != OrderStatus.ReadyForPickup)
             {
-                return BadRequest("This order is not available.");
+                return BadRequest(
+                    "This order is not ready for pickup."
+                );
             }
 
+            // Assign the order to this rider
             order.RiderId = riderId;
-            order.Status = "Accepted";
+
+            // Once rider accepts the delivery,
+            // the order is now out for delivery.
+            order.OrderStatus = OrderStatus.OutForDelivery;
 
             await _context.SaveChangesAsync();
 
             return Ok(new
             {
-                Message = "Order accepted successfully.",
+                Message = "Delivery accepted successfully.",
                 OrderId = order.Id,
-                Status = order.Status
+                Status = order.OrderStatus.ToString()
             });
         }
 
         // =========================
         // MY ASSIGNED ORDERS
         // =========================
+
         [HttpGet("my-orders")]
         public async Task<IActionResult> GetMyOrders()
         {
-            var riderId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var riderId = User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            );
 
             if (string.IsNullOrEmpty(riderId))
             {
@@ -152,7 +179,7 @@ namespace FoodDelivery.API.Controllers
                     RestaurantName = o.Restaurant!.Name,
                     RestaurantAddress = o.Restaurant.Address,
                     TotalAmount = o.TotalAmount,
-                    Status = o.Status,
+                    Status = o.OrderStatus.ToString(),
                     OrderDate = o.OrderDate
                 })
                 .ToListAsync();
@@ -163,12 +190,15 @@ namespace FoodDelivery.API.Controllers
         // =========================
         // UPDATE DELIVERY STATUS
         // =========================
+
         [HttpPut("update-delivery-status/{orderId}")]
         public async Task<IActionResult> UpdateDeliveryStatus(
             int orderId,
             UpdateDeliveryStatusDto model)
         {
-            var riderId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var riderId = User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            );
 
             if (string.IsNullOrEmpty(riderId))
             {
@@ -185,19 +215,63 @@ namespace FoodDelivery.API.Controllers
                 return NotFound("Order not found.");
             }
 
-            // Validate delivery status transition
+            if (model == null ||
+                string.IsNullOrWhiteSpace(model.Status))
+            {
+                return BadRequest(
+                    "Delivery status is required."
+                );
+            }
+
+            if (!Enum.TryParse<OrderStatus>(
+                model.Status,
+                true,
+                out var newStatus))
+            {
+                return BadRequest(
+                    $"Invalid delivery status: '{model.Status}'."
+                );
+            }
+
+            // =========================
+            // RIDER DELIVERY FLOW
+            // =========================
+            //
+            // OutForDelivery
+            //       ↓
+            // Delivered
+            //
+            // The restaurant controls:
+            //
+            // Pending
+            //       ↓
+            // Accepted
+            //       ↓
+            // Preparing
+            //       ↓
+            // ReadyForPickup
+            //
+            // The rider controls:
+            //
+            // ReadyForPickup
+            //       ↓
+            // OutForDelivery
+            //       ↓
+            // Delivered
+            // =========================
+
             var validTransition =
-                (order.Status == "Accepted" && model.Status == "PickedUp") ||
-                (order.Status == "PickedUp" && model.Status == "OnTheWay") ||
-                (order.Status == "OnTheWay" && model.Status == "Delivered");
+                order.OrderStatus == OrderStatus.OutForDelivery &&
+                newStatus == OrderStatus.Delivered;
 
             if (!validTransition)
             {
                 return BadRequest(
-                    $"Cannot change status from '{order.Status}' to '{model.Status}'.");
+                    $"Cannot change status from '{order.OrderStatus}' to '{newStatus}'."
+                );
             }
 
-            order.Status = model.Status;
+            order.OrderStatus = newStatus;
 
             await _context.SaveChangesAsync();
 
@@ -205,7 +279,7 @@ namespace FoodDelivery.API.Controllers
             {
                 Message = "Delivery status updated successfully.",
                 OrderId = order.Id,
-                NewStatus = order.Status
+                NewStatus = order.OrderStatus.ToString()
             });
         }
     }

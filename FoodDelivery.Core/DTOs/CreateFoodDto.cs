@@ -18,8 +18,5 @@ namespace FoodDelivery.Core.DTOs
 
         [Required]
         public int RestaurantId { get; set; }
-
-        [Required]
-        public int CategoryId { get; set; }
     }
 }

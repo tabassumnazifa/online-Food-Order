@@ -12,8 +12,6 @@ namespace FoodDelivery.Infrastructure.Data
         {
         }
 
-
-
         // =========================
         // DATABASE TABLES
         // =========================
@@ -38,7 +36,6 @@ namespace FoodDelivery.Infrastructure.Data
 
         public DbSet<RiderLocation> RiderLocations { get; set; }
 
-
         // =========================
         // SECURITY / POLICY TABLE
         // =========================
@@ -46,12 +43,9 @@ namespace FoodDelivery.Infrastructure.Data
         public DbSet<Policy> Policies { get; set; }
 
 
-
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-
-
 
             // =========================
             // ORDER STATUS ENUM
@@ -62,12 +56,16 @@ namespace FoodDelivery.Infrastructure.Data
                 .Property(o => o.OrderStatus)
                 .HasConversion<string>();
 
-                builder.Entity<RiderLocation>()
-    .HasOne(r => r.Rider)
-    .WithMany()
-    .HasForeignKey(r => r.RiderId)
-    .OnDelete(DeleteBehavior.Cascade);
 
+            // =========================
+            // RIDER LOCATION -> RIDER
+            // =========================
+
+            builder.Entity<RiderLocation>()
+                .HasOne(r => r.Rider)
+                .WithMany()
+                .HasForeignKey(r => r.RiderId)
+                .OnDelete(DeleteBehavior.Cascade);
 
 
             // =========================
@@ -78,11 +76,9 @@ namespace FoodDelivery.Infrastructure.Data
                 .Property(o => o.DiscountPercentage)
                 .HasPrecision(5, 2);
 
-
             builder.Entity<Offer>()
                 .Property(o => o.MaximumDiscount)
                 .HasPrecision(10, 2);
-
 
 
             // =========================
@@ -96,7 +92,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
 
-
             // =========================
             // RESTAURANT -> OWNER
             // =========================
@@ -106,7 +101,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .WithMany()
                 .HasForeignKey(r => r.OwnerId)
                 .OnDelete(DeleteBehavior.Restrict);
-
 
 
             // =========================
@@ -120,21 +114,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
 
-
-            // =========================
-            // FOOD -> CATEGORY
-            // =========================
-
-            builder.Entity<Food>()
-                .HasOne(f => f.Category)
-                .WithMany(c => c.Foods)
-                .HasForeignKey(f => f.CategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-                // =========================
-
-
-
             // =========================
             // ORDER -> CUSTOMER
             // =========================
@@ -144,7 +123,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .WithMany()
                 .HasForeignKey(o => o.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict);
-
 
 
             // =========================
@@ -158,7 +136,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
 
-
             // =========================
             // ORDER -> RESTAURANT
             // =========================
@@ -168,7 +145,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .WithMany(r => r.Orders)
                 .HasForeignKey(o => o.RestaurantId)
                 .OnDelete(DeleteBehavior.Restrict);
-
 
 
             // =========================
@@ -182,7 +158,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
 
-
             // =========================
             // ORDER ITEM -> FOOD
             // =========================
@@ -192,7 +167,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .WithMany(f => f.OrderItems)
                 .HasForeignKey(oi => oi.FoodId)
                 .OnDelete(DeleteBehavior.Restrict);
-
 
 
             // =========================
@@ -206,7 +180,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
 
-
             // =========================
             // CART ITEM -> FOOD
             // =========================
@@ -216,7 +189,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .WithMany()
                 .HasForeignKey(c => c.FoodId)
                 .OnDelete(DeleteBehavior.Cascade);
-
 
 
             // =========================
@@ -231,7 +203,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
 
-
             // =========================
             // PAYMENT DECIMAL
             // =========================
@@ -239,7 +210,6 @@ namespace FoodDelivery.Infrastructure.Data
             builder.Entity<Payment>()
                 .Property(p => p.Amount)
                 .HasPrecision(10, 2);
-
 
 
             // =========================
@@ -253,7 +223,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
 
-
             // =========================
             // FEEDBACK -> RESTAURANT
             // =========================
@@ -265,7 +234,6 @@ namespace FoodDelivery.Infrastructure.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
 
-
             // =========================
             // POLICY CONFIGURATION
             // =========================
@@ -273,7 +241,6 @@ namespace FoodDelivery.Infrastructure.Data
             builder.Entity<Policy>()
                 .Property(p => p.Title)
                 .HasMaxLength(200);
-
 
             builder.Entity<Policy>()
                 .Property(p => p.Type)

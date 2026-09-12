@@ -51,6 +51,7 @@ import CreateOffer from "./pages/CreateOffer";
 
 import RiderDashboard from "./pages/RiderDashboard";
 import AvailableOrders from "./pages/AvailableOrders";
+import RiderOrders from "./pages/RiderOrders";
 
 // =========================
 // Admin Pages
@@ -208,6 +209,11 @@ function App() {
           <Route
             path="/rider/available-orders"
             element={<AvailableOrders />}
+          />
+
+          <Route
+            path="/rider/orders"
+            element={<RiderOrders />}
           />
 
           {/* =========================

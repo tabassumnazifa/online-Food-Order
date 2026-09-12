@@ -33,7 +33,6 @@ namespace FoodDelivery.API.Controllers
             if (string.IsNullOrEmpty(ownerId))
                 return Unauthorized();
 
-            // Find the restaurant owned by the logged-in owner
             var restaurant = await _context.Restaurants
                 .FirstOrDefaultAsync(r =>
                     r.Id == model.RestaurantId &&
@@ -42,15 +41,6 @@ namespace FoodDelivery.API.Controllers
             if (restaurant == null)
             {
                 return Forbid();
-            }
-
-            // Check category
-            var category = await _context.Categories
-                .FindAsync(model.CategoryId);
-
-            if (category == null)
-            {
-                return NotFound("Category not found.");
             }
 
             // Prevent duplicate food in the same restaurant
@@ -70,8 +60,7 @@ namespace FoodDelivery.API.Controllers
                 Description = model.Description,
                 Price = model.Price,
                 IsAvailable = model.IsAvailable,
-                RestaurantId = restaurant.Id,
-                CategoryId = model.CategoryId
+                RestaurantId = restaurant.Id
             };
 
             _context.Foods.Add(food);
@@ -88,7 +77,6 @@ namespace FoodDelivery.API.Controllers
         // =====================================================
         // GET ALL FOODS
         // PUBLIC
-        // Customers can see all foods
         // =====================================================
 
         [AllowAnonymous]
@@ -97,7 +85,6 @@ namespace FoodDelivery.API.Controllers
         {
             var foods = await _context.Foods
                 .Include(f => f.Restaurant)
-                .Include(f => f.Category)
                 .Select(f => new FoodResponseDto
                 {
                     Id = f.Id,
@@ -107,10 +94,7 @@ namespace FoodDelivery.API.Controllers
                     IsAvailable = f.IsAvailable,
 
                     RestaurantId = f.RestaurantId,
-                    RestaurantName = f.Restaurant!.Name,
-
-                    CategoryId = f.CategoryId,
-                    CategoryName = f.Category!.Name
+                    RestaurantName = f.Restaurant!.Name
                 })
                 .ToListAsync();
 
@@ -121,7 +105,6 @@ namespace FoodDelivery.API.Controllers
         // =====================================================
         // GET FOODS BY RESTAURANT
         // PUBLIC
-        // Customers can view any restaurant's menu
         // =====================================================
 
         [AllowAnonymous]
@@ -140,7 +123,6 @@ namespace FoodDelivery.API.Controllers
             var foods = await _context.Foods
                 .Where(f => f.RestaurantId == restaurantId)
                 .Include(f => f.Restaurant)
-                .Include(f => f.Category)
                 .Select(f => new FoodResponseDto
                 {
                     Id = f.Id,
@@ -150,13 +132,9 @@ namespace FoodDelivery.API.Controllers
                     IsAvailable = f.IsAvailable,
 
                     RestaurantId = f.RestaurantId,
-                    RestaurantName = f.Restaurant!.Name,
-
-                    CategoryId = f.CategoryId,
-                    CategoryName = f.Category!.Name
+                    RestaurantName = f.Restaurant!.Name
                 })
-                .OrderBy(f => f.CategoryId)
-                .ThenBy(f => f.Name)
+                .OrderBy(f => f.Name)
                 .ToListAsync();
 
             return Ok(foods);
@@ -174,7 +152,6 @@ namespace FoodDelivery.API.Controllers
         {
             var food = await _context.Foods
                 .Include(f => f.Restaurant)
-                .Include(f => f.Category)
                 .Where(f => f.Id == id)
                 .Select(f => new FoodResponseDto
                 {
@@ -185,10 +162,7 @@ namespace FoodDelivery.API.Controllers
                     IsAvailable = f.IsAvailable,
 
                     RestaurantId = f.RestaurantId,
-                    RestaurantName = f.Restaurant!.Name,
-
-                    CategoryId = f.CategoryId,
-                    CategoryName = f.Category!.Name
+                    RestaurantName = f.Restaurant!.Name
                 })
                 .FirstOrDefaultAsync();
 
@@ -230,19 +204,10 @@ namespace FoodDelivery.API.Controllers
                     "Food not found or you do not own this food.");
             }
 
-            var category = await _context.Categories
-                .FindAsync(model.CategoryId);
-
-            if (category == null)
-            {
-                return NotFound("Category not found.");
-            }
-
             food.Name = model.Name;
             food.Description = model.Description;
             food.Price = model.Price;
             food.IsAvailable = model.IsAvailable;
-            food.CategoryId = model.CategoryId;
 
             await _context.SaveChangesAsync();
 

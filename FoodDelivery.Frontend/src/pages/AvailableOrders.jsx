@@ -72,7 +72,7 @@ function AvailableOrders() {
 
       alert("Order accepted successfully.");
 
-      fetchOrders();
+      await fetchOrders();
     } catch (error) {
       console.error("Accept Order Error:", error);
 
@@ -82,18 +82,41 @@ function AvailableOrders() {
           "Failed to accept order."
       );
 
-      fetchOrders();
+      await fetchOrders();
     } finally {
       setAccepting(null);
     }
   };
 
+  const formatDate = (date) => {
+    if (!date) return "N/A";
+
+    return new Date(date).toLocaleString("en-BD", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  };
+
+  const formatAmount = (amount) => {
+    return Number(amount || 0).toLocaleString("en-BD", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
   if (loading) {
     return (
-      <div className="dashboard-page">
-        <div className="dashboard-card">
-          <h1>📦 Available Orders</h1>
-          <p>Loading orders...</p>
+      <div className="rider-orders-page">
+        <div className="rider-orders-container">
+          <div className="rider-loading">
+            <div className="rider-loading-spinner"></div>
+
+            <h2>Loading available orders...</h2>
+
+            <p>
+              Looking for orders that are ready for delivery.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -101,125 +124,201 @@ function AvailableOrders() {
 
   if (error) {
     return (
-      <div className="dashboard-page">
-        <div className="dashboard-card">
-          <h1>📦 Available Orders</h1>
-          <p>{error}</p>
+      <div className="rider-orders-page">
+        <div className="rider-orders-container">
+          <div className="rider-error-card">
+            <div className="rider-error-icon">⚠️</div>
 
-          <button
-            type="button"
-            onClick={() => navigate("/rider/dashboard")}
-          >
-            ← Rider Dashboard
-          </button>
+            <h2>Something went wrong</h2>
+
+            <p>{error}</p>
+
+            <button
+              type="button"
+              className="rider-primary-btn"
+              onClick={() => navigate("/rider/dashboard")}
+            >
+              ← Rider Dashboard
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div
-      className="dashboard-page"
-      style={{
-        padding: "40px 20px",
-        maxWidth: "1200px",
-        margin: "0 auto",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "15px",
-          marginBottom: "30px",
-        }}
-      >
-        <div>
-          <h1>📦 Available Orders</h1>
+    <div className="rider-orders-page">
+      <div className="rider-orders-container">
 
-          <p style={{ color: "#666" }}>
-            Orders currently waiting for a delivery rider.
-          </p>
-        </div>
+        {/* Header */}
+        <section className="rider-orders-header">
+          <div>
+            <p className="rider-dashboard-eyebrow">
+              DELIVERY CENTER
+            </p>
 
-        <button
-          type="button"
-          onClick={() => navigate("/rider/dashboard")}
-        >
-          ← Dashboard
-        </button>
-      </div>
+            <h1>Available Orders</h1>
 
-      {orders.length === 0 ? (
-        <div className="dashboard-card">
-          <h2>📭 No Available Orders</h2>
+            <p className="rider-dashboard-subtitle">
+              Find orders waiting for a delivery rider and start your next
+              delivery.
+            </p>
+          </div>
 
-          <p>
-            There are currently no orders waiting for a delivery
-            rider.
-          </p>
-        </div>
-      ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit, minmax(320px, 1fr))",
-            gap: "20px",
-          }}
-        >
-          {orders.map((order) => (
-            <div
-              className="dashboard-card"
-              key={order.orderId}
-            >
-              <h2>📦 Order #{order.orderId}</h2>
+          <div className="rider-header-icon">
+            📦
+          </div>
+        </section>
 
-              <p>
-                <strong>Restaurant:</strong>{" "}
-                {order.restaurantName}
-              </p>
+        {/* Top actions */}
+        <div className="rider-orders-toolbar">
+          <div className="rider-orders-count">
+            <span className="rider-orders-count-icon">📦</span>
 
-              <p>
-                <strong>Restaurant Address:</strong>{" "}
-                {order.restaurantAddress}
-              </p>
-
-              <p>
-                <strong>Total Amount:</strong>{" "}
-                ৳{order.totalAmount}
-              </p>
-
-              <p>
-                <strong>Status:</strong>{" "}
-                {order.status}
-              </p>
-
-              <p>
-                <strong>Order Date:</strong>{" "}
-                {order.orderDate
-                  ? new Date(
-                      order.orderDate
-                    ).toLocaleString()
-                  : "N/A"}
-              </p>
-
-              <button
-                type="button"
-                onClick={() => handleAccept(order.orderId)}
-                disabled={accepting === order.orderId}
-                style={{ marginTop: "15px" }}
-              >
-                {accepting === order.orderId
-                  ? "Accepting..."
-                  : "🛵 Accept Order"}
-              </button>
+            <div>
+              <strong>{orders.length}</strong>
+              <span>
+                {orders.length === 1
+                  ? " order available"
+                  : " orders available"}
+              </span>
             </div>
-          ))}
+          </div>
+
+          <button
+            type="button"
+            className="rider-secondary-btn"
+            onClick={() => navigate("/rider/dashboard")}
+          >
+            ← Dashboard
+          </button>
         </div>
-      )}
+
+        {/* Empty state */}
+        {orders.length === 0 ? (
+          <div className="rider-empty-card">
+            <div className="rider-empty-icon">
+              📭
+            </div>
+
+            <h2>No Available Orders</h2>
+
+            <p>
+              There are currently no orders waiting for a delivery rider.
+              Check again shortly.
+            </p>
+
+            <button
+              type="button"
+              className="rider-primary-btn"
+              onClick={fetchOrders}
+            >
+              🔄 Refresh Orders
+            </button>
+          </div>
+        ) : (
+          <div className="rider-orders-grid">
+            {orders.map((order) => (
+              <article
+                className="rider-order-card"
+                key={order.orderId}
+              >
+                <div className="rider-order-card-top">
+                  <div>
+                    <span className="rider-order-label">
+                      ORDER
+                    </span>
+
+                    <h2>
+                      #{order.orderId}
+                    </h2>
+                  </div>
+
+                  <span className="rider-order-status">
+                    {order.status || "Pending"}
+                  </span>
+                </div>
+
+                <div className="rider-order-divider"></div>
+
+                <div className="rider-order-details">
+
+                  <div className="rider-order-detail">
+                    <span className="rider-detail-icon">
+                      🏪
+                    </span>
+
+                    <div>
+                      <span className="rider-detail-label">
+                        Restaurant
+                      </span>
+
+                      <strong>
+                        {order.restaurantName || "Unknown Restaurant"}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div className="rider-order-detail">
+                    <span className="rider-detail-icon">
+                      📍
+                    </span>
+
+                    <div>
+                      <span className="rider-detail-label">
+                        Pickup Address
+                      </span>
+
+                      <strong>
+                        {order.restaurantAddress || "Address unavailable"}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div className="rider-order-detail">
+                    <span className="rider-detail-icon">
+                      🕐
+                    </span>
+
+                    <div>
+                      <span className="rider-detail-label">
+                        Order Time
+                      </span>
+
+                      <strong>
+                        {formatDate(order.orderDate)}
+                      </strong>
+                    </div>
+                  </div>
+
+                </div>
+
+                <div className="rider-order-footer">
+                  <div className="rider-order-amount">
+                    <span>Total Amount</span>
+
+                    <strong>
+                      ৳{formatAmount(order.totalAmount)}
+                    </strong>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="rider-accept-btn"
+                    onClick={() => handleAccept(order.orderId)}
+                    disabled={accepting === order.orderId}
+                  >
+                    {accepting === order.orderId
+                      ? "Accepting..."
+                      : "🛵 Accept Order"}
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }

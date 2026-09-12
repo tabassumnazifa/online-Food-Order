@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -13,6 +14,9 @@ function Orders() {
     fetchOrders();
   }, []);
 
+  // =========================
+  // FETCH ORDERS
+  // =========================
   const fetchOrders = async () => {
     const token = localStorage.getItem("token");
 
@@ -56,155 +60,82 @@ function Orders() {
     }
   };
 
-  const getStatusClass = (status) => {
-    const normalizedStatus = status?.toLowerCase();
+  // =========================
+  // STATUS HELPERS
+  // =========================
+  const normalizeStatus = (status) => {
+    if (!status) return "pending";
 
-    if (
-      normalizedStatus === "delivered" ||
-      normalizedStatus === "completed"
-    ) {
-      return "customer-order-status delivered";
-    }
-
-    if (
-      normalizedStatus === "cancelled" ||
-      normalizedStatus === "canceled"
-    ) {
-      return "customer-order-status cancelled";
-    }
-
-    if (
-      normalizedStatus === "pending" ||
-      normalizedStatus === "processing"
-    ) {
-      return "customer-order-status pending";
-    }
-
-    if (
-      normalizedStatus === "out for delivery" ||
-      normalizedStatus === "outfordelivery"
-    ) {
-      return "customer-order-status delivery";
-    }
-
-    return "customer-order-status";
+    return status.toLowerCase().replace(/\s+/g, "");
   };
 
-  const getStatusIcon = (status) => {
-    const normalizedStatus = status?.toLowerCase();
+  const formatStatus = (status) => {
+    if (!status) return "Pending";
 
-    if (
-      normalizedStatus === "delivered" ||
-      normalizedStatus === "completed"
-    ) {
-      return "✓";
-    }
-
-    if (
-      normalizedStatus === "cancelled" ||
-      normalizedStatus === "canceled"
-    ) {
-      return "×";
-    }
-
-    if (
-      normalizedStatus === "out for delivery" ||
-      normalizedStatus === "outfordelivery"
-    ) {
-      return "🚴";
-    }
-
-    return "•";
+    return status
+      .replace(/([A-Z])/g, " $1")
+      .replace(/^./, (char) => char.toUpperCase())
+      .trim();
   };
 
-  return (
-    <main className="customer-orders-page">
-      <div className="customer-orders-container">
+  const isCancelled = (status) => {
+    const normalized = normalizeStatus(status);
 
-        {/* PAGE HEADER */}
-        <section className="customer-page-header">
-          <div>
-            <span className="customer-page-eyebrow">
-              ORDER HISTORY
-            </span>
+    return (
+      normalized === "cancelled" ||
+      normalized === "canceled"
+    );
+  };
 
-            <h1>My Orders</h1>
+  const isDelivered = (status) => {
+    return normalizeStatus(status) === "delivered";
+  };
 
-            <p>
-              Keep track of your recent orders and delivery status.
-            </p>
-          </div>
+  // =========================
+  // STATUS STEPS
+  // =========================
+  const statusSteps = [
+    {
+      value: "pending",
+      label: "Placed",
+    },
+    {
+      value: "accepted",
+      label: "Accepted",
+    },
+    {
+      value: "preparing",
+      label: "Preparing",
+    },
+    {
+      value: "readyforpickup",
+      label: "Ready",
+    },
+    {
+      value: "outfordelivery",
+      label: "On the way",
+    },
+    {
+      value: "delivered",
+      label: "Delivered",
+    },
+  ];
 
-          <button
-            className="customer-primary-btn"
-            onClick={() => navigate("/restaurants")}
-          >
-            <span>🍔</span>
-            Order Food
-          </button>
-        </section>
+  const getCurrentStep = (status) => {
+    const normalized = normalizeStatus(status);
 
-        {/* SUMMARY */}
-        {!loading && !error && orders.length > 0 && (
-          <section className="customer-order-summary">
+    return statusSteps.findIndex(
+      (step) => step.value === normalized
+    );
+  };
 
-            <div className="customer-summary-card">
-              <div className="customer-summary-icon green">
-                🧾
-              </div>
-
-              <div>
-                <span>Total Orders</span>
-                <strong>{orders.length}</strong>
-              </div>
-            </div>
-
-            <div className="customer-summary-card">
-              <div className="customer-summary-icon orange">
-                🍽️
-              </div>
-
-              <div>
-                <span>Recent Orders</span>
-                <strong>
-                  {orders.filter(
-                    (order) =>
-                      order.status?.toLowerCase() !== "cancelled" &&
-                      order.status?.toLowerCase() !== "canceled"
-                  ).length}
-                </strong>
-              </div>
-            </div>
-
-            <div className="customer-summary-card">
-              <div className="customer-summary-icon blue">
-                🚴
-              </div>
-
-              <div>
-                <span>Active Orders</span>
-                <strong>
-                  {
-                    orders.filter((order) => {
-                      const status = order.status?.toLowerCase();
-
-                      return (
-                        status !== "delivered" &&
-                        status !== "completed" &&
-                        status !== "cancelled" &&
-                        status !== "canceled"
-                      );
-                    }).length
-                  }
-                </strong>
-              </div>
-            </div>
-
-          </section>
-        )}
-
-        {/* LOADING */}
-        {loading && (
+  // =========================
+  // LOADING
+  // =========================
+  if (loading) {
+    return (
+      <main className="customer-orders-page">
+        <div className="customer-orders-container">
           <div className="customer-orders-loading">
             <div className="customer-loading-spinner"></div>
 
@@ -214,10 +145,48 @@ function Orders() {
               Please wait while we fetch your order history.
             </p>
           </div>
-        )}
+        </div>
+      </main>
+    );
+  }
 
-        {/* ERROR */}
-        {!loading && error && (
+  // =========================
+  // PAGE
+  // =========================
+  return (
+    <main className="customer-orders-page">
+      <div className="customer-orders-container">
+
+        {/* =========================
+            PAGE HEADER
+            ========================= */}
+        <section className="customer-page-header">
+          <div>
+            <span className="customer-page-eyebrow">
+              ORDER HISTORY
+            </span>
+
+            <h1>My Orders</h1>
+
+            <p>
+              Track your orders and see their current status.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="customer-primary-btn"
+            onClick={() => navigate("/restaurants")}
+          >
+            <span>🍔</span>
+            Order Food
+          </button>
+        </section>
+
+        {/* =========================
+            ERROR
+            ========================= */}
+        {error && (
           <div className="customer-orders-error">
             <div className="customer-error-icon">
               !
@@ -225,9 +194,11 @@ function Orders() {
 
             <div>
               <h3>Unable to load orders</h3>
+
               <p>{error}</p>
 
               <button
+                type="button"
                 className="customer-outline-btn"
                 onClick={fetchOrders}
               >
@@ -237,10 +208,11 @@ function Orders() {
           </div>
         )}
 
-        {/* EMPTY STATE */}
-        {!loading && !error && orders.length === 0 && (
+        {/* =========================
+            EMPTY
+            ========================= */}
+        {!error && orders.length === 0 && (
           <div className="customer-orders-empty">
-
             <div className="customer-empty-icon">
               🛍️
             </div>
@@ -252,180 +224,312 @@ function Orders() {
             <h2>Your order history is empty</h2>
 
             <p>
-              Looks like you haven't ordered anything yet.
+              You haven't placed any orders yet.
               Explore restaurants and find something delicious.
             </p>
 
             <button
+              type="button"
               className="customer-primary-btn"
               onClick={() => navigate("/restaurants")}
             >
               <span>🍔</span>
               Browse Restaurants
             </button>
-
           </div>
         )}
 
-        {/* ORDERS */}
-        {!loading && !error && orders.length > 0 && (
+        {/* =========================
+            ORDERS
+            ========================= */}
+        {!error && orders.length > 0 && (
           <section className="customer-orders-section">
 
+            {/* SECTION HEADER */}
             <div className="customer-section-heading">
               <div>
-                <h2>Recent Orders</h2>
+                <h2>Your Orders</h2>
+
                 <p>
-                  Your latest food orders are shown below.
+                  View your order details and delivery progress.
                 </p>
               </div>
 
               <span className="customer-order-count">
                 {orders.length}{" "}
-                {orders.length === 1 ? "order" : "orders"}
+                {orders.length === 1
+                  ? "order"
+                  : "orders"}
               </span>
             </div>
 
+            {/* ORDER LIST */}
             <div className="customer-orders-list">
 
-              {orders.map((order) => (
-                <article
-                  className="customer-order-card"
-                  key={order.orderId}
-                >
+              {orders.map((order) => {
+                const currentStep = getCurrentStep(
+                  order.status
+                );
 
-                  {/* ORDER TOP */}
-                  <div className="customer-order-top">
+                const cancelled = isCancelled(
+                  order.status
+                );
 
-                    <div className="customer-order-number">
-                      <div className="customer-order-icon">
-                        🍽️
+                const delivered = isDelivered(
+                  order.status
+                );
+
+                return (
+                  <article
+                    className="customer-order-card"
+                    key={order.orderId}
+                  >
+
+                    {/* =========================
+                        ORDER HEADER
+                        ========================= */}
+                    <div className="customer-order-top">
+
+                      <div className="customer-order-number">
+
+                        <div className="customer-order-icon">
+                          🍽️
+                        </div>
+
+                        <div>
+                          <span>ORDER</span>
+
+                          <h3>
+                            #{order.orderId}
+                          </h3>
+                        </div>
+
                       </div>
 
-                      <div>
-                        <span>ORDER</span>
+                      <div
+                        className={`customer-order-status ${
+                          cancelled
+                            ? "cancelled"
+                            : delivered
+                            ? "delivered"
+                            : "active"
+                        }`}
+                      >
+                        <span>
+                          {cancelled
+                            ? "×"
+                            : delivered
+                            ? "✓"
+                            : "•"}
+                        </span>
 
-                        <h3>
-                          #{order.orderId}
-                        </h3>
-                      </div>
-                    </div>
-
-                    <div
-                      className={getStatusClass(
-                        order.status
-                      )}
-                    >
-                      <span>
-                        {getStatusIcon(order.status)}
-                      </span>
-
-                      {order.status || "Pending"}
-                    </div>
-
-                  </div>
-
-                  {/* ORDER DETAILS */}
-                  <div className="customer-order-details">
-
-                    <div className="customer-order-detail">
-
-                      <span className="customer-detail-icon">
-                        🏪
-                      </span>
-
-                      <div>
-                        <small>Restaurant</small>
-
-                        <strong>
-                          {order.restaurantName ||
-                            "Restaurant"}
-                        </strong>
-                      </div>
-
-                    </div>
-
-                    <div className="customer-order-detail">
-
-                      <span className="customer-detail-icon">
-                        📅
-                      </span>
-
-                      <div>
-                        <small>Order date</small>
-
-                        <strong>
-                          {order.orderDate
-                            ? new Date(
-                                order.orderDate
-                              ).toLocaleDateString(
-                                "en-GB",
-                                {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                }
-                              )
-                            : "N/A"}
-                        </strong>
+                        {formatStatus(order.status)}
                       </div>
 
                     </div>
 
-                    <div className="customer-order-detail">
+                    {/* =========================
+                        BASIC DETAILS
+                        ========================= */}
+                    <div className="customer-order-details">
 
-                      <span className="customer-detail-icon">
-                        🕐
-                      </span>
+                      <div className="customer-order-detail">
+                        <span className="customer-detail-icon">
+                          🏪
+                        </span>
 
-                      <div>
-                        <small>Time</small>
+                        <div>
+                          <small>Restaurant</small>
 
-                        <strong>
-                          {order.orderDate
-                            ? new Date(
-                                order.orderDate
-                              ).toLocaleTimeString(
-                                "en-US",
-                                {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )
-                            : "N/A"}
-                        </strong>
+                          <strong>
+                            {order.restaurantName ||
+                              "Restaurant"}
+                          </strong>
+                        </div>
                       </div>
 
-                    </div>
+                      <div className="customer-order-detail">
+                        <span className="customer-detail-icon">
+                          📅
+                        </span>
 
-                    <div className="customer-order-detail total">
+                        <div>
+                          <small>Date</small>
 
-                      <span className="customer-detail-icon">
-                        ৳
-                      </span>
+                          <strong>
+                            {order.orderDate
+                              ? new Date(
+                                  order.orderDate
+                                ).toLocaleDateString(
+                                  "en-GB",
+                                  {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                  }
+                                )
+                              : "N/A"}
+                          </strong>
+                        </div>
+                      </div>
 
-                      <div>
-                        <small>Total amount</small>
+                      <div className="customer-order-detail">
+                        <span className="customer-detail-icon">
+                          🕐
+                        </span>
 
-                        <strong>
+                        <div>
+                          <small>Time</small>
+
+                          <strong>
+                            {order.orderDate
+                              ? new Date(
+                                  order.orderDate
+                                ).toLocaleTimeString(
+                                  "en-US",
+                                  {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  }
+                                )
+                              : "N/A"}
+                          </strong>
+                        </div>
+                      </div>
+
+                      <div className="customer-order-detail total">
+                        <span className="customer-detail-icon">
                           ৳
-                          {Number(
-                            order.totalAmount || 0
-                          ).toLocaleString()}
-                        </strong>
+                        </span>
+
+                        <div>
+                          <small>Total</small>
+
+                          <strong>
+                            ৳
+                            {Number(
+                              order.totalAmount || 0
+                            ).toLocaleString()}
+                          </strong>
+                        </div>
                       </div>
 
                     </div>
 
-                  </div>
+                    {/* =========================
+                        PROGRESS
+                        ========================= */}
+                    {!cancelled && (
+                      <div className="customer-order-progress">
 
-                </article>
-              ))}
+                        <div className="customer-progress-heading">
+                          <span>ORDER STATUS</span>
+
+                          <strong>
+                            {formatStatus(
+                              order.status
+                            )}
+                          </strong>
+                        </div>
+
+                        <div className="customer-progress-bar">
+
+                          {statusSteps.map(
+                            (step, index) => {
+                              const completed =
+                                index <= currentStep;
+
+                              const current =
+                                index === currentStep;
+
+                              return (
+                                <div
+                                  key={step.value}
+                                  className={`customer-progress-item ${
+                                    completed
+                                      ? "completed"
+                                      : ""
+                                  } ${
+                                    current
+                                      ? "current"
+                                      : ""
+                                  }`}
+                                >
+                                  <div className="customer-progress-circle">
+                                    {completed
+                                      ? "✓"
+                                      : ""}
+                                  </div>
+
+                                  <span>
+                                    {step.label}
+                                  </span>
+                                </div>
+                              );
+                            }
+                          )}
+
+                        </div>
+                      </div>
+                    )}
+
+                    {/* =========================
+                        CANCELLED
+                        ========================= */}
+                    {cancelled && (
+                      <div className="customer-order-message cancelled">
+                        <span>×</span>
+
+                        <div>
+                          <strong>
+                            Order cancelled
+                          </strong>
+
+                          <p>
+                            This order is no longer being
+                            processed.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* =========================
+                        DELIVERED
+                        ========================= */}
+                    {delivered && (
+                      <div className="customer-order-message delivered">
+                        <span>✓</span>
+
+                        <div>
+                          <strong>
+                            Order delivered
+                          </strong>
+
+                          <p>
+                            Your order has been successfully
+                            delivered.
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          className="customer-outline-btn"
+                          onClick={() =>
+                            navigate("/feedback")
+                          }
+                        >
+                          ⭐ Give Feedback
+                        </button>
+                      </div>
+                    )}
+
+                  </article>
+                );
+              })}
 
             </div>
-
           </section>
         )}
-
       </div>
     </main>
   );

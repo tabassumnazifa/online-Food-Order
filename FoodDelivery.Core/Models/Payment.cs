@@ -17,8 +17,21 @@ namespace FoodDelivery.Core.Models
 
         public PaymentStatus PaymentStatus { get; set; }
 
+        // Our internal transaction ID
         public string? TransactionId { get; set; }
 
+        // SSLCommerz bank transaction ID
+        public string? BankTransactionId { get; set; }
+
+        // SSLCommerz refund reference ID
+        public string? RefundReferenceId { get; set; }
+
+        // Refund status
+        public string? RefundStatus { get; set; }
+
         public DateTime PaymentDate { get; set; } = DateTime.UtcNow;
+
+        // When refund was requested
+        public DateTime? RefundDate { get; set; }
     }
 }
