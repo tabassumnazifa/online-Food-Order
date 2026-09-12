@@ -35,7 +35,6 @@ function AdminOrders() {
       );
 
       console.log("Admin Orders:", response.data);
-
       setOrders(response.data);
     } catch (error) {
       console.error("Admin Orders Error:", error);
@@ -57,39 +56,63 @@ function AdminOrders() {
     }
   };
 
-  const getStatusStyle = (status) => {
-    if (status === "Delivered") {
-      return {
-        backgroundColor: "#d4edda",
-        color: "#155724",
-      };
-    }
-
-    if (status === "Cancelled") {
-      return {
-        backgroundColor: "#f8d7da",
-        color: "#721c24",
-      };
-    }
-
-    if (status === "Placed") {
-      return {
-        backgroundColor: "#fff3cd",
-        color: "#856404",
-      };
-    }
-
-    if (status === "Accepted" || status === "PickedUp") {
-      return {
-        backgroundColor: "#cce5ff",
-        color: "#004085",
-      };
-    }
-
-    return {
-      backgroundColor: "#e2e3e5",
-      color: "#383d41",
+  // ==========================================
+  // NEW: Helper to translate Payment Status
+  // ==========================================
+  const getPaymentStatusText = (status) => {
+    const map = { 
+      1: "Pending", 
+      2: "Paid", 
+      3: "Failed", 
+      4: "Cancelled",
+      // Fallback if backend already sends strings
+      "Pending": "Pending",
+      "Paid": "Paid",
+      "Failed": "Failed",
+      "Cancelled": "Cancelled"
     };
+    return map[status] || status || "Unknown";
+  };
+
+  // ==========================================
+  // NEW: Helper to translate Order Status
+  // ==========================================
+  const getOrderStatusText = (status) => {
+    const map = { 
+      1: "Placed", 
+      2: "Accepted", 
+      3: "Preparing", 
+      4: "Out for Delivery", 
+      5: "Delivered", 
+      6: "Cancelled",
+      // Fallback if backend already sends strings
+      "Placed": "Placed",
+      "Pending": "Placed",
+      "Accepted": "Accepted",
+      "PickedUp": "Out for Delivery",
+      "Delivered": "Delivered",
+      "Cancelled": "Cancelled"
+    };
+    return map[status] || status || "Unknown";
+  };
+
+  // ==========================================
+  // UPDATED: Color styles for the new text
+  // ==========================================
+  const getStatusStyle = (status) => {
+    if (status === "Delivered" || status === "Paid") {
+      return { backgroundColor: "#d4edda", color: "#155724" }; // Green
+    }
+    if (status === "Cancelled" || status === "Failed") {
+      return { backgroundColor: "#f8d7da", color: "#721c24" }; // Red
+    }
+    if (status === "Placed" || status === "Pending" || status === "Preparing") {
+      return { backgroundColor: "#fff3cd", color: "#856404" }; // Yellow/Orange
+    }
+    if (status === "Accepted" || status === "PickedUp" || status === "Out for Delivery") {
+      return { backgroundColor: "#cce5ff", color: "#004085" }; // Blue
+    }
+    return { backgroundColor: "#e2e3e5", color: "#383d41" }; // Grey
   };
 
   if (loading) {
@@ -180,87 +203,93 @@ function AdminOrders() {
             gap: "20px",
           }}
         >
-          {orders.map((order) => (
-            <div
-              className="dashboard-card"
-              key={order.id}
-            >
-              <h2>📦 Order #{order.id}</h2>
+          {orders.map((order) => {
+            // Convert numbers to readable text
+            const orderStatusText = getOrderStatusText(order.orderStatus);
+            const paymentStatusText = getPaymentStatusText(order.paymentStatus);
 
-              <p>
-                <strong>Customer:</strong>{" "}
-                {order.customerName || "N/A"}
-              </p>
-
-              <p>
-                <strong>Restaurant:</strong>{" "}
-                {order.restaurantName || "N/A"}
-              </p>
-
-              <p>
-                <strong>Delivery Rider:</strong>{" "}
-                {order.riderName || "Not Assigned"}
-              </p>
-
-              <p>
-                <strong>Total Amount:</strong>{" "}
-                ৳{order.totalAmount ?? 0}
-              </p>
-
-              <p>
-                <strong>Order Date:</strong>{" "}
-                {order.orderDate
-                  ? new Date(order.orderDate).toLocaleString()
-                  : "N/A"}
-              </p>
-
-              <div style={{ marginTop: "15px" }}>
-                <p>
-                  <strong>Order Status:</strong>
-                </p>
-
-                <span
-                  style={{
-                    ...getStatusStyle(order.orderStatus),
-                    padding: "6px 12px",
-                    borderRadius: "15px",
-                    fontWeight: "600",
-                    display: "inline-block",
-                  }}
-                >
-                  {order.orderStatus || "Unknown"}
-                </span>
-              </div>
-
-              <div style={{ marginTop: "15px" }}>
-                <p>
-                  <strong>Payment Status:</strong>
-                </p>
-
-                <span
-                  style={{
-                    ...getStatusStyle(order.paymentStatus),
-                    padding: "6px 12px",
-                    borderRadius: "15px",
-                    fontWeight: "600",
-                    display: "inline-block",
-                  }}
-                >
-                  {order.paymentStatus || "Unknown"}
-                </span>
-              </div>
-
-              <button
-                type="button"
-                onClick={() =>
-                  navigate(`/admin/orders/${order.id}`)
-                }
-                style={{ marginTop: "20px" }}
+            return (
+              <div
+                className="dashboard-card"
+                key={order.id}
               >
-                👁️ View Details
-              </button>
-            </div>
-          ))}
+                <h2>📦 Order #{order.id}</h2>
+
+                <p>
+                  <strong>Customer:</strong>{" "}
+                  {order.customerName || "N/A"}
+                </p>
+
+                <p>
+                  <strong>Restaurant:</strong>{" "}
+                  {order.restaurantName || "N/A"}
+                </p>
+
+                <p>
+                  <strong>Delivery Rider:</strong>{" "}
+                  {order.riderName || "Not Assigned"}
+                </p>
+
+                <p>
+                  <strong>Total Amount:</strong>{" "}
+                  ৳{order.totalAmount ?? 0}
+                </p>
+
+                <p>
+                  <strong>Order Date:</strong>{" "}
+                  {order.orderDate
+                    ? new Date(order.orderDate).toLocaleString()
+                    : "N/A"}
+                </p>
+
+                <div style={{ marginTop: "15px" }}>
+                  <p>
+                    <strong>Order Status:</strong>
+                  </p>
+
+                  <span
+                    style={{
+                      ...getStatusStyle(orderStatusText),
+                      padding: "6px 12px",
+                      borderRadius: "15px",
+                      fontWeight: "600",
+                      display: "inline-block",
+                    }}
+                  >
+                    {orderStatusText}
+                  </span>
+                </div>
+
+                <div style={{ marginTop: "15px" }}>
+                  <p>
+                    <strong>Payment Status:</strong>
+                  </p>
+
+                  <span
+                    style={{
+                      ...getStatusStyle(paymentStatusText),
+                      padding: "6px 12px",
+                      borderRadius: "15px",
+                      fontWeight: "600",
+                      display: "inline-block",
+                    }}
+                  >
+                    {paymentStatusText}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(`/admin/orders/${order.id}`)
+                  }
+                  style={{ marginTop: "20px" }}
+                >
+                  👁️ View Details
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

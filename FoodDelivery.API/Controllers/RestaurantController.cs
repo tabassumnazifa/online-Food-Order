@@ -1,5 +1,4 @@
-﻿
-using FoodDelivery.Core.DTOs;
+﻿using FoodDelivery.Core.DTOs;
 using FoodDelivery.Core.Enums;
 using FoodDelivery.Core.Models;
 using FoodDelivery.Infrastructure.Data;
@@ -201,10 +200,13 @@ namespace FoodDelivery.API.Controllers
                         o.RestaurantId == restaurant.Id &&
                         o.OrderStatus == OrderStatus.Delivered),
 
+                // FIX: Calculate revenue only for orders that actually have a "Paid" status.
+                // This matches the Admin dashboard logic and prevents counting unpaid COD orders.
                 TotalRevenue = await _context.Orders
                     .Where(o =>
                         o.RestaurantId == restaurant.Id &&
-                        o.OrderStatus == OrderStatus.Delivered)
+                        o.Payment != null &&
+                        o.Payment.PaymentStatus == PaymentStatus.Paid)
                     .SumAsync(o =>
                         (decimal?)o.TotalAmount) ?? 0
             };
@@ -298,19 +300,6 @@ namespace FoodDelivery.API.Controllers
             // =========================
             // RESTAURANT STATUS FLOW
             // =========================
-            //
-            // Pending
-            //    ↓
-            // Accepted
-            //    ↓
-            // Preparing
-            //    ↓
-            // ReadyForPickup
-            //
-            // After ReadyForPickup, the
-            // delivery rider handles the rest.
-            // =========================
-
             var validTransition =
                 (order.OrderStatus == OrderStatus.Pending &&
                  newStatus == OrderStatus.Accepted) ||

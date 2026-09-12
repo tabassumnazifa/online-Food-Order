@@ -1,4 +1,3 @@
-
 import "./App.css";
 
 import { Routes, Route } from "react-router-dom";
@@ -62,6 +61,7 @@ import AdminRestaurants from "./pages/AdminRestaurants";
 import AdminUsers from "./pages/AdminUsers";
 import AdminOrders from "./pages/AdminOrders";
 import AdminOffers from "./pages/AdminOffers";
+import AdminPayments from "./pages/AdminPayments";
 
 // =========================
 // App
@@ -243,6 +243,11 @@ function App() {
           <Route
             path="/admin/offers"
             element={<AdminOffers />}
+          />
+
+          <Route
+            path="/admin/payments"
+            element={<AdminPayments />}
           />
 
         </Routes>
