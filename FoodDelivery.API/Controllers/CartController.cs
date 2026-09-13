@@ -1,4 +1,5 @@
-﻿using FoodDelivery.Core.DTOs;
+﻿using FoodDelivery.Core.Constants; // IMPORTANT: Add this for the limits
+using FoodDelivery.Core.DTOs;
 using FoodDelivery.Core.Enums;
 using FoodDelivery.Core.Models;
 using FoodDelivery.Infrastructure.Data;
@@ -22,48 +23,76 @@ namespace FoodDelivery.API.Controllers
         }
 
         // =========================
-        // ADD ITEM TO CART
+        // ADD ITEM TO CART (WITH LIMITS)
         // =========================
         [HttpPost("add")]
         public async Task<IActionResult> AddToCart(CreateCartItemDto model)
         {
-            // Get the logged-in customer's ID from the JWT token
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(customerId))
-            {
                 return Unauthorized();
-            }
 
-            // Check whether the selected food item exists
             var food = await _context.Foods.FindAsync(model.FoodId);
 
             if (food == null)
-            {
                 return NotFound("Food item not found.");
-            }
 
-            // Check whether this food item already exists in the customer's cart
+            // Get existing cart item if it exists
             var existingCartItem = await _context.CartItems
                 .FirstOrDefaultAsync(c =>
                     c.CustomerId == customerId &&
                     c.FoodId == model.FoodId);
 
+            int newQuantity = existingCartItem != null 
+                ? existingCartItem.Quantity + model.Quantity 
+                : model.Quantity;
+
+            // 🛡️ LIMIT 1: Max quantity per item (e.g., max 10)
+            if (newQuantity > OrderLimits.MaxQuantityPerItem)
+            {
+                return BadRequest($"You cannot order more than {OrderLimits.MaxQuantityPerItem} of the same item.");
+            }
+
+            // Get all items currently in the cart to calculate totals
+            var allCartItems = await _context.CartItems
+                .Where(c => c.CustomerId == customerId)
+                .Include(c => c.Food)
+                .ToListAsync();
+
+            // Calculate current totals (excluding the item being added/updated)
+            int currentTotalItems = allCartItems.Where(c => c.FoodId != model.FoodId).Sum(c => c.Quantity);
+            decimal currentTotalValue = allCartItems.Where(c => c.FoodId != model.FoodId).Sum(c => c.Food!.Price * c.Quantity);
+
+            // Add the new/updated item to the totals
+            int finalTotalItems = currentTotalItems + newQuantity;
+            decimal finalTotalValue = currentTotalValue + (food.Price * newQuantity);
+
+            // 🛡️ LIMIT 2: Max total items per order
+            if (finalTotalItems > OrderLimits.MaxItemsPerOrder)
+            {
+                return BadRequest($"Your cart cannot exceed {OrderLimits.MaxItemsPerOrder} total items.");
+            }
+
+            // 🛡️ LIMIT 3: Max order value
+            if (finalTotalValue > OrderLimits.MaxOrderValue)
+            {
+                return BadRequest($"Order value cannot exceed ৳{OrderLimits.MaxOrderValue:N0}.");
+            }
+
+            // If all checks pass, add/update the cart item
             if (existingCartItem != null)
             {
-                // Increase the quantity if the item already exists
-                existingCartItem.Quantity += model.Quantity;
+                existingCartItem.Quantity = newQuantity;
             }
             else
             {
-                // Otherwise create a new cart item
                 var cartItem = new CartItem
                 {
                     CustomerId = customerId,
                     FoodId = model.FoodId,
                     Quantity = model.Quantity
                 };
-
                 _context.CartItems.Add(cartItem);
             }
 
@@ -72,65 +101,81 @@ namespace FoodDelivery.API.Controllers
             return Ok("Item added to cart successfully.");
         }
 
-        
-  [HttpGet]
-public async Task<IActionResult> GetMyCart()
-{
-    var customerId =
-        User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-    if (string.IsNullOrEmpty(customerId))
-    {
-        return Unauthorized();
-    }
-
-    var cartItems = await _context.CartItems
-        .Where(c => c.CustomerId == customerId)
-        .Include(c => c.Food)
-        .Select(c => new CartItemResponseDto
+        // =========================
+        // GET MY CART
+        // =========================
+        [HttpGet]
+        public async Task<IActionResult> GetMyCart()
         {
-            Id = c.Id,
-            FoodId = c.FoodId,
-            FoodName = c.Food!.Name,
-            Price = c.Food.Price,
-            Quantity = c.Quantity,
-            TotalPrice = c.Food.Price * c.Quantity,
+            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            // IMPORTANT
-            RestaurantId = c.Food.RestaurantId
-        })
-        .ToListAsync();
+            if (string.IsNullOrEmpty(customerId))
+                return Unauthorized();
 
-    return Ok(cartItems);
-}
+            var cartItems = await _context.CartItems
+                .Where(c => c.CustomerId == customerId)
+                .Include(c => c.Food)
+                .Select(c => new CartItemResponseDto
+                {
+                    Id = c.Id,
+                    FoodId = c.FoodId,
+                    FoodName = c.Food!.Name,
+                    Price = c.Food.Price,
+                    Quantity = c.Quantity,
+                    TotalPrice = c.Food.Price * c.Quantity,
+                    RestaurantId = c.Food.RestaurantId
+                })
+                .ToListAsync();
+
+            return Ok(cartItems);
+        }
 
         // =========================
-        // UPDATE CART ITEM QUANTITY
+        // UPDATE CART ITEM QUANTITY (WITH LIMITS)
         // =========================
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCartItem(int id, UpdateCartItemDto model)
         {
-            // Get the logged-in customer's ID
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(customerId))
-            {
                 return Unauthorized();
-            }
 
-            // Find the cart item that belongs to the logged-in customer
             var cartItem = await _context.CartItems
-                .FirstOrDefaultAsync(c =>
-                    c.Id == id &&
-                    c.CustomerId == customerId);
+                .Include(c => c.Food)
+                .FirstOrDefaultAsync(c => c.Id == id && c.CustomerId == customerId);
 
             if (cartItem == null)
-            {
                 return NotFound("Cart item not found.");
+
+            // 🛡️ LIMIT 1: Max quantity per item
+            if (model.Quantity > OrderLimits.MaxQuantityPerItem)
+            {
+                return BadRequest($"You cannot order more than {OrderLimits.MaxQuantityPerItem} of the same item.");
+            }
+
+            // Get all other items in the cart to calculate totals
+            var allCartItems = await _context.CartItems
+                .Where(c => c.CustomerId == customerId && c.Id != id) // Exclude the item being updated
+                .Include(c => c.Food)
+                .ToListAsync();
+
+            int finalTotalItems = allCartItems.Sum(c => c.Quantity) + model.Quantity;
+            decimal finalTotalValue = allCartItems.Sum(c => c.Food!.Price * c.Quantity) + (cartItem.Food!.Price * model.Quantity);
+
+            // 🛡️ LIMIT 2: Max total items
+            if (finalTotalItems > OrderLimits.MaxItemsPerOrder)
+            {
+                return BadRequest($"Your cart cannot exceed {OrderLimits.MaxItemsPerOrder} total items.");
+            }
+
+            // 🛡️ LIMIT 3: Max order value
+            if (finalTotalValue > OrderLimits.MaxOrderValue)
+            {
+                return BadRequest($"Order value cannot exceed ৳{OrderLimits.MaxOrderValue:N0}.");
             }
 
             cartItem.Quantity = model.Quantity;
-
             await _context.SaveChangesAsync();
 
             return Ok("Cart item updated successfully.");
@@ -142,27 +187,18 @@ public async Task<IActionResult> GetMyCart()
         [HttpDelete("{id}")]
         public async Task<IActionResult> RemoveCartItem(int id)
         {
-            // Get the logged-in customer's ID
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(customerId))
-            {
                 return Unauthorized();
-            }
 
-            // Find the cart item that belongs to the logged-in customer
             var cartItem = await _context.CartItems
-                .FirstOrDefaultAsync(c =>
-                    c.Id == id &&
-                    c.CustomerId == customerId);
+                .FirstOrDefaultAsync(c => c.Id == id && c.CustomerId == customerId);
 
             if (cartItem == null)
-            {
                 return NotFound("Cart item not found.");
-            }
 
             _context.CartItems.Remove(cartItem);
-
             await _context.SaveChangesAsync();
 
             return Ok("Cart item removed successfully.");

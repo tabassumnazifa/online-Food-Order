@@ -44,7 +44,6 @@ namespace FoodDelivery.API.Controllers
             if (restaurant == null)
                 return NotFound("Restaurant not found.");
 
-            // Prevent customers from ordering from suspended restaurants
             if (restaurant.IsSuspended)
             {
                 return BadRequest(
@@ -125,7 +124,6 @@ namespace FoodDelivery.API.Controllers
             if (order == null)
                 return NotFound("Order not found.");
 
-            // FIX: Prevent IDOR - Users can only view their own orders
             if (!isAdmin && order.CustomerId != currentUserId)
                 return Forbid();
 
@@ -177,7 +175,6 @@ namespace FoodDelivery.API.Controllers
             if (order == null)
                 return NotFound("Order not found.");
 
-            // FIX: State machine validation - Can only cancel if not yet out for delivery
             if (order.OrderStatus == OrderStatus.OutForDelivery ||
                 order.OrderStatus == OrderStatus.Delivered)
             {
@@ -189,7 +186,6 @@ namespace FoodDelivery.API.Controllers
                 return BadRequest("Order is already cancelled.");
             }
 
-            // FIX: If payment was made, initiate refund
             if (order.Payment != null && order.Payment.PaymentStatus == PaymentStatus.Paid)
             {
                 var refundResult = await _paymentService.InitiateRefundAsync(
@@ -199,8 +195,6 @@ namespace FoodDelivery.API.Controllers
 
                 if (refundResult.Success)
                 {
-                    // Note: Ensure 'Refunded' exists in your PaymentStatus enum. 
-                    // If not, change this to PaymentStatus.Cancelled
                     order.Payment.PaymentStatus = PaymentStatus.Refunded; 
                     order.Payment.RefundReferenceId = refundResult.RefundReferenceId;
                 }
@@ -239,7 +233,6 @@ namespace FoodDelivery.API.Controllers
             if (restaurant == null)
                 return NotFound("Restaurant not found.");
 
-            // Prevent checkout from suspended restaurants
             if (restaurant.IsSuspended)
             {
                 return BadRequest(
@@ -256,7 +249,6 @@ namespace FoodDelivery.API.Controllers
             if (!cartItems.Any())
                 return BadRequest("Your cart is empty.");
 
-            // FIX: Validate food availability and price before checkout
             foreach (var cartItem in cartItems)
             {
                 if (cartItem.Food == null)
@@ -285,7 +277,10 @@ namespace FoodDelivery.API.Controllers
 
                 if (offer != null)
                 {
-                    decimal discountAmount = totalAmount * (offer.DiscountPercentage / 100);
+                    // 🚨 FIX: Added 'm' to 100 to prevent integer division!
+                    // (e.g. 20 / 100m = 0.20, instead of 20 / 100 = 0)
+                    decimal discountAmount = totalAmount * ((decimal)offer.DiscountPercentage / 100m);
+                    
                     if (offer.MaximumDiscount.HasValue && offer.MaximumDiscount.Value > 0 && discountAmount > offer.MaximumDiscount.Value)
                     {
                         discountAmount = offer.MaximumDiscount.Value;
@@ -357,7 +352,6 @@ namespace FoodDelivery.API.Controllers
             if (!Enum.TryParse<OrderStatus>(model.Status, true, out var newStatus))
                 return BadRequest($"Invalid order status: '{model.Status}'.");
 
-            // FIX: Validate state transitions
             var validTransition = ValidateStatusTransition(order.OrderStatus, newStatus, isAdmin, currentUserId, order);
 
             if (!validTransition)
@@ -386,11 +380,9 @@ namespace FoodDelivery.API.Controllers
             string currentUserId,
             Order order)
         {
-            // Admin can override any status
             if (isAdmin)
                 return true;
 
-            // Standard state machine flow
             return (currentStatus == OrderStatus.Pending && newStatus == OrderStatus.Accepted) ||
                    (currentStatus == OrderStatus.Accepted && newStatus == OrderStatus.Preparing) ||
                    (currentStatus == OrderStatus.Preparing && newStatus == OrderStatus.ReadyForPickup) ||

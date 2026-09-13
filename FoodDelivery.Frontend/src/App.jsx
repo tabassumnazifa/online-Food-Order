@@ -4,6 +4,7 @@ import { Routes, Route } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import ChatBot from "./components/ChatBot"; // ADDED
 
 // =========================
 // Customer Pages
@@ -65,7 +66,7 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminOrders from "./pages/AdminOrders";
 import AdminOffers from "./pages/AdminOffers";
 import AdminPayments from "./pages/AdminPayments";
-import AdminPendingApprovals from "./pages/AdminPendingApprovals"; // ADDED
+import AdminPendingApprovals from "./pages/AdminPendingApprovals";
 
 // =========================
 // App
@@ -244,7 +245,6 @@ function App() {
             element={<AdminDashboard />}
           />
 
-          {/* ADDED: Pending Approvals Route */}
           <Route
             path="/admin/approvals"
             element={<AdminPendingApprovals />}
@@ -279,6 +279,9 @@ function App() {
       </main>
 
       <Footer />
+
+      {/* ADDED: The Chatbot floats on every page! */}
+      <ChatBot />
     </>
   );
 }
