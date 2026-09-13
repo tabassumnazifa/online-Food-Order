@@ -10,22 +10,10 @@ function Checkout() {
   const [restaurantId, setRestaurantId] = useState(location.state?.restaurantId || null);
   const [paymentMethod, setPaymentMethod] = useState("1");
   const [deliveryAddress, setDeliveryAddress] = useState("");
-
-  // =========================
-  // COUPON STATES
-  // =========================
-  const [couponCode, setCouponCode] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const [applyingCoupon, setApplyingCoupon] = useState(false);
-  const [couponError, setCouponError] = useState("");
-
   const [loading, setLoading] = useState(true);
   const [placingOrder, setPlacingOrder] = useState(false);
   const [error, setError] = useState("");
 
-  // =========================
-  // COUPON STATES
-  // =========================
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
@@ -47,13 +35,11 @@ function Checkout() {
     try {
       setLoading(true);
       setError("");
-
       const response = await axios.get(`${API_URL}/Cart`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       const cartItems = response.data;
-
       if (!cartItems || cartItems.length === 0) {
         setCart([]);
         setError("Your cart is empty.");
@@ -61,7 +47,6 @@ function Checkout() {
       }
 
       setCart(cartItems);
-
       if (location.state?.restaurantId) {
         setRestaurantId(location.state.restaurantId);
         return;
@@ -69,21 +54,19 @@ function Checkout() {
 
       const firstItem = cartItems[0];
       const id = firstItem.restaurantId || firstItem.RestaurantId;
-
       if (!id) {
         setError("Could not determine the restaurant for this cart.");
         return;
       }
-
       setRestaurantId(id);
-    } catch (error) {
-      console.error("Checkout cart error:", error);
-      if (error.response?.status === 401) {
+    } catch (err) {
+      console.error("Checkout cart error:", err);
+      if (err.response?.status === 401) {
         localStorage.removeItem("token");
         navigate("/login");
         return;
       }
-      setError(error.response?.data?.message || error.response?.data || "Failed to load checkout information.");
+      setError(err.response?.data?.message || err.response?.data || "Failed to load checkout information.");
     } finally {
       setLoading(false);
     }
@@ -95,9 +78,6 @@ function Checkout() {
 
   const totalItems = cart.reduce((total, item) => total + Number(item.quantity || 0), 0);
 
-  // =========================
-  // APPLY COUPON
-  // =========================
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {
       setCouponError("Please enter a coupon code.");
@@ -111,7 +91,6 @@ function Checkout() {
     try {
       setApplyingCoupon(true);
       setCouponError("");
-
       const response = await axios.post(
         `${API_URL}/Offer/validate`,
         {
@@ -119,55 +98,26 @@ function Checkout() {
           restaurantId: restaurantId,
           cartTotal: calculateTotal(),
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
       setAppliedCoupon(response.data);
     } catch (err) {
       console.error("Coupon error:", err);
       setAppliedCoupon(null);
       setCouponError(
-        err.response?.data?.message ||
-          (typeof err.response?.data === "string"
-            ? err.response.data
-            : "Invalid or expired coupon code.")
+        err.response?.data?.message || (typeof err.response?.data === "string" ? err.response.data : "Invalid or expired coupon code.")
       );
     } finally {
       setApplyingCoupon(false);
     }
   };
-    if (!restaurantId) {
-      setCouponError("Restaurant information is missing.");
-      return;
-    }
 
-    try {
-      setApplyingCoupon(true);
-      setCouponError("");
-
-    if (!deliveryAddress.trim()) {
-      alert("Please enter your delivery address.");
-      return;
-    }
-    }
-  };
-
-  // =========================
-  // REMOVE COUPON
-  // =========================
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null);
     setCouponCode("");
     setCouponError("");
   };
 
-  // =========================
-  // PLACE ORDER
-  // =========================
   const handlePlaceOrder = async () => {
     if (!restaurantId) return alert("Restaurant information is missing.");
     if (!cart.length) return alert("Your cart is empty.");
@@ -177,17 +127,12 @@ function Checkout() {
       setPlacingOrder(true);
       setError("");
 
-      // ==========================================
-      // STEP 1: CREATE ORDER (with coupon)
-      // ==========================================
       const orderResponse = await axios.post(
         `${API_URL}/Order/checkout`,
         {
           restaurantId: restaurantId,
           deliveryAddress: deliveryAddress.trim(),
-          couponCode: appliedCoupon
-            ? appliedCoupon.couponCode
-            : null,
+          couponCode: appliedCoupon ? appliedCoupon.couponCode : null,
         },
         { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
@@ -195,14 +140,12 @@ function Checkout() {
       const orderId = orderResponse.data?.orderId;
       if (!orderId) throw new Error("Order ID was not returned from the server.");
 
-      // STEP 2: CREATE PAYMENT
       const paymentResponse = await axios.post(
         `${API_URL}/Payment/pay`,
         { orderId: orderId, paymentMethod: Number(paymentMethod) },
         { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
-      // STEP 3: ONLINE PAYMENT REDIRECT
       if (Number(paymentMethod) === 2) {
         const paymentUrl = paymentResponse.data?.paymentUrl;
         if (!paymentUrl) throw new Error("SSLCommerz payment URL was not returned.");
@@ -210,14 +153,13 @@ function Checkout() {
         return;
       }
 
-      // STEP 4: CASH ON DELIVERY SUCCESS
       alert(`Order placed successfully! Order #${orderId}`);
       navigate("/orders");
-    } catch (error) {
-      console.error("Checkout/payment error:", error);
+    } catch (err) {
+      console.error("Checkout/payment error:", err);
       const message =
-        error.response?.data?.message ||
-        (typeof error.response?.data === "string" ? error.response.data : error.message || "Failed to place order.");
+        err.response?.data?.message ||
+        (typeof err.response?.data === "string" ? err.response.data : err.message || "Failed to place order.");
       alert(message);
     } finally {
       setPlacingOrder(false);
@@ -255,9 +197,7 @@ function Checkout() {
   }
 
   const total = calculateTotal();
-  const finalTotal = appliedCoupon
-    ? appliedCoupon.finalTotal
-    : total;
+  const finalTotal = appliedCoupon ? appliedCoupon.finalTotal : total;
 
   return (
     <main className="customer-checkout-page">
@@ -279,7 +219,6 @@ function Checkout() {
 
         <div className="customer-checkout-layout">
           <section className="customer-checkout-main">
-            {/* ORDER ITEMS */}
             <div className="customer-checkout-card">
               <div className="customer-checkout-card-heading">
                 <div>
@@ -305,7 +244,6 @@ function Checkout() {
               </div>
             </div>
 
-            {/* DELIVERY ADDRESS */}
             <div className="customer-checkout-card">
               <div className="customer-checkout-card-heading">
                 <div>
@@ -334,117 +272,6 @@ function Checkout() {
               />
             </div>
 
-            {/* =========================
-                COUPON CODE (NEW)
-                ========================= */}
-
-            <div className="customer-checkout-card">
-
-              <div className="customer-checkout-card-heading">
-                <div>
-                  <span className="customer-page-eyebrow">
-                    SAVINGS
-                  </span>
-
-                  <h2>Have a Coupon?</h2>
-                </div>
-
-                <div className="customer-checkout-heading-icon">
-                  🏷️
-                </div>
-              </div>
-
-              {appliedCoupon ? (
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    backgroundColor: "#d4edda",
-                    color: "#155724",
-                    padding: "12px 16px",
-                    borderRadius: "8px",
-                    fontWeight: "600",
-                  }}
-                >
-                  <span>
-                    ✓ {appliedCoupon.couponCode} applied —
-                    you saved ৳{appliedCoupon.discountAmount}!
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={handleRemoveCoupon}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      color: "#155724",
-                      cursor: "pointer",
-                      fontWeight: "700",
-                      fontSize: "1rem",
-                    }}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "10px",
-                    }}
-                  >
-                    <input
-                      type="text"
-                      placeholder="Enter coupon code (e.g. PIZZA20)"
-                      className="customer-checkout-input"
-                      value={couponCode}
-                      onChange={(e) =>
-                        setCouponCode(
-                          e.target.value.toUpperCase()
-                        )
-                      }
-                      style={{ flex: 1 }}
-                    />
-
-                    <button
-                      type="button"
-                      onClick={handleApplyCoupon}
-                      disabled={applyingCoupon}
-                      style={{
-                        padding: "10px 20px",
-                        backgroundColor: "#007bff",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "8px",
-                        cursor: "pointer",
-                        fontWeight: "600",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {applyingCoupon
-                        ? "Applying..."
-                        : "Apply"}
-                    </button>
-                  </div>
-
-                  {couponError && (
-                    <p
-                      style={{
-                        color: "#dc3545",
-                        marginTop: "8px",
-                        fontWeight: "600",
-                      }}
-                    >
-                      {couponError}
-                    </p>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* PAYMENT METHOD */}
             <div className="customer-checkout-card">
               <div className="customer-checkout-card-heading">
                 <div>
@@ -483,7 +310,6 @@ function Checkout() {
               )}
             </div>
 
-            {/* PAYMENT METHOD */}
             <div className="customer-checkout-card">
               <div className="customer-checkout-card-heading">
                 <div>
@@ -507,7 +333,6 @@ function Checkout() {
             </div>
           </section>
 
-          {/* RIGHT SIDE SUMMARY */}
           <aside className="customer-checkout-summary">
             <div className="customer-checkout-summary-top">
               <span className="customer-page-eyebrow">ORDER TOTAL</span>
@@ -520,30 +345,19 @@ function Checkout() {
               </div>
               {appliedCoupon && (
                 <div>
-                  <span>
-                    Discount ({appliedCoupon.discountPercentage}%)
-                  </span>
-
-                  <strong style={{ color: "#28a745" }}>
-                    − ৳{appliedCoupon.discountAmount.toLocaleString()}
-                  </strong>
+                  <span>Discount ({appliedCoupon.discountPercentage}%)</span>
+                  <strong style={{ color: "#28a745" }}>− ৳{appliedCoupon.discountAmount.toLocaleString()}</strong>
                 </div>
               )}
-
               <div>
                 <span>Delivery fee</span>
-
-                <strong className="customer-checkout-free">
-                  Free
-                </strong>
+                <strong className="customer-checkout-free">Free</strong>
               </div>
             </div>
             <div className="customer-checkout-divider"></div>
             <div className="customer-checkout-total">
               <span>Total</span>
-              <strong>
-                ৳{finalTotal.toLocaleString()}
-              </strong>
+              <strong>৳{finalTotal.toLocaleString()}</strong>
             </div>
             <button type="button" className="customer-place-order-btn" onClick={handlePlaceOrder} disabled={placingOrder}>
               {placingOrder ? (<><span className="customer-checkout-spinner"></span> Processing...</>) : (<>Place Order <span>→</span></>)}

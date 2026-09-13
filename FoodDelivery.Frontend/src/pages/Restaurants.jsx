@@ -6,7 +6,6 @@ function Restaurants() {
   const navigate = useNavigate();
 
   const [restaurants, setRestaurants] = useState([]);
-  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -32,10 +31,6 @@ function Restaurants() {
     }
   };
 
-  const filtered = restaurants.filter((r) =>
-    (r.name || "").toLowerCase().includes(search.toLowerCase())
-  );
-
   const renderStars = (rating) => {
     const rounded = Math.round(Number(rating || 0));
     return "★".repeat(rounded) + "☆".repeat(5 - rounded);
@@ -60,7 +55,7 @@ function Restaurants() {
       }}
     >
       {/* =========================
-          HEADER + SEARCH
+          HEADER (NO SEARCH BOX)
           ========================= */}
       <div style={{ textAlign: "center", marginBottom: "40px" }}>
         <span
@@ -84,24 +79,6 @@ function Restaurants() {
         <p style={{ color: "#666", fontSize: "1.1rem" }}>
           Choose your favorite restaurant and order delicious food.
         </p>
-
-        <input
-          type="text"
-          placeholder="🔍 Search restaurants by name..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{
-            marginTop: "20px",
-            width: "100%",
-            maxWidth: "450px",
-            padding: "14px 20px",
-            border: "2px solid #e0e0e0",
-            borderRadius: "30px",
-            fontSize: "1rem",
-            outline: "none",
-            boxSizing: "border-box",
-          }}
-        />
       </div>
 
       {/* =========================
@@ -140,7 +117,7 @@ function Restaurants() {
       {/* =========================
           EMPTY
           ========================= */}
-      {!error && filtered.length === 0 && (
+      {!error && restaurants.length === 0 && (
         <div
           style={{
             textAlign: "center",
@@ -151,18 +128,14 @@ function Restaurants() {
         >
           <div style={{ fontSize: "3rem", marginBottom: "10px" }}>🍽️</div>
           <h3>No restaurants found</h3>
-          <p style={{ color: "#666" }}>
-            {search
-              ? `Nothing matches "${search}".`
-              : "There are no restaurants yet."}
-          </p>
+          <p style={{ color: "#666" }}>There are no restaurants yet.</p>
         </div>
       )}
 
       {/* =========================
           RESTAURANT CARDS
           ========================= */}
-      {!error && filtered.length > 0 && (
+      {!error && restaurants.length > 0 && (
         <div
           style={{
             display: "grid",
@@ -170,7 +143,7 @@ function Restaurants() {
             gap: "25px",
           }}
         >
-          {filtered.map((r) => (
+          {restaurants.map((r) => (
             <div
               key={r.id}
               style={{
@@ -232,7 +205,7 @@ function Restaurants() {
                 )}
               </div>
 
-              {/* CARD BODY (NO DESCRIPTION!) */}
+              {/* CARD BODY */}
               <div
                 style={{
                   padding: "22px 24px",
