@@ -56,23 +56,39 @@ function AdminPayments() {
   };
 
   const getPaymentStatusText = (status) => {
-    const map = { 
-      1: "Pending", 2: "Paid", 3: "Failed", 4: "Cancelled",
-      "Pending": "Pending", "Paid": "Paid", "Failed": "Failed", "Cancelled": "Cancelled"
+    const map = {
+      1: "Pending",
+      2: "Paid",
+      3: "Failed",
+      4: "Cancelled",
+      5: "Refunded",
+      Pending: "Pending",
+      Paid: "Paid",
+      Failed: "Failed",
+      Cancelled: "Cancelled",
+      Refunded: "Refunded",
     };
-    return map[status] || status || "Unknown";
+    return map[status] ?? (status || "Unknown");
   };
 
+  // ==========================================
+  // FIXED: Correct enum numbers -> text
+  // CashOnDelivery = 1, Online = 2
+  // ==========================================
   const getPaymentMethodText = (method) => {
-    const map = { 
-      1: "Online Payment", 2: "Cash on Delivery",
-      "OnlinePayment": "Online Payment", "CashOnDelivery": "Cash on Delivery"
+    const map = {
+      1: "Cash on Delivery",
+      2: "Online Payment",
+      CashOnDelivery: "Cash on Delivery",
+      Online: "Online Payment",
+      OnlinePayment: "Online Payment",
     };
-    return map[method] || method || "Unknown";
+    return map[method] ?? (method || "Unknown");
   };
 
   const getStatusStyle = (statusText) => {
     if (statusText === "Paid") return { backgroundColor: "#d4edda", color: "#155724" };
+    if (statusText === "Refunded") return { backgroundColor: "#cce5ff", color: "#004085" };
     if (statusText === "Failed" || statusText === "Cancelled") return { backgroundColor: "#f8d7da", color: "#721c24" };
     if (statusText === "Pending") return { backgroundColor: "#fff3cd", color: "#856404" };
     return { backgroundColor: "#e2e3e5", color: "#383d41" };
@@ -136,7 +152,7 @@ function AdminPayments() {
       {/* Payments Table */}
       <div className="dashboard-card">
         <h2 style={{ marginBottom: "20px" }}>All Payment Records</h2>
-        
+
         {payments.length === 0 ? (
           <p>No payment records found.</p>
         ) : (
