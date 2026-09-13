@@ -1,3 +1,4 @@
+using System;
 using System.Security.Claims;
 using FoodDelivery.Core.DTOs;
 using FoodDelivery.Core.Enums;
@@ -531,7 +532,7 @@ namespace FoodDelivery.API.Controllers
         }
 
         // ==========================================================
-        // REFUND CUSTOMER PAYMENT
+        // CANCEL ORDER & REFUND CUSTOMER PAYMENT (FIXED)
         // ==========================================================
 
         [HttpPost("refund/{orderId}")]
@@ -548,124 +549,72 @@ namespace FoodDelivery.API.Controllers
                 return Unauthorized();
             }
 
-            var order =
-                await _context.Orders
-                    .FirstOrDefaultAsync(
-                        o =>
-                            o.Id == orderId &&
-                            o.CustomerId == customerId);
+            var order = await _context.Orders
+                .Include(o => o.Payment)
+                .FirstOrDefaultAsync(o => o.Id == orderId && o.CustomerId == customerId);
 
             if (order == null)
             {
-                return NotFound(
-                    "Order not found.");
+                return NotFound("Order not found.");
             }
 
-            if (order.OrderStatus !=
-                OrderStatus.Cancelled)
+            // Prevent cancelling orders that are already on the way
+            if (order.OrderStatus == OrderStatus.Delivered || 
+                order.OrderStatus == OrderStatus.OutForDelivery)
             {
-                return BadRequest(
-                    "Refund is only available for cancelled orders.");
+                return BadRequest("Cannot cancel an order that is already out for delivery or delivered.");
             }
 
-            var payment =
-                await _context.Payments
-                    .FirstOrDefaultAsync(
-                        p =>
-                            p.OrderId == orderId &&
-                            p.CustomerId == customerId);
-
-            if (payment == null)
+            if (order.OrderStatus == OrderStatus.Cancelled)
             {
-                return NotFound(
-                    "Payment not found.");
+                return BadRequest("This order is already cancelled.");
             }
 
-            if (payment.PaymentMethod ==
-                PaymentMethod.CashOnDelivery)
+            var refundReason = string.IsNullOrWhiteSpace(reason) ? "Customer cancelled order." : reason;
+
+            // 1. Mark the order as cancelled
+            order.OrderStatus = OrderStatus.Cancelled;
+
+            if (order.Payment != null)
             {
-                return BadRequest(
-                    "Cash on Delivery orders do not require a refund.");
-            }
-
-            if (payment.PaymentStatus !=
-                PaymentStatus.Paid)
-            {
-                return BadRequest(
-                    "Only paid online payments can be refunded.");
-            }
-
-            if (string.IsNullOrWhiteSpace(
-                    payment.BankTransactionId))
-            {
-                return BadRequest(
-                    "SSLCommerz bank transaction ID is missing.");
-            }
-
-            // Prevent duplicate refund requests.
-            if (!string.IsNullOrWhiteSpace(
-                    payment.RefundReferenceId))
-            {
-                return BadRequest(
-                    "A refund has already been requested for this payment.");
-            }
-
-            var refundReason =
-                string.IsNullOrWhiteSpace(reason)
-                    ? "Order cancelled."
-                    : reason;
-
-            var refundResult =
-                await _paymentService
-                    .InitiateRefundAsync(
-                        payment,
-                        refundReason);
-
-            if (!refundResult.Success)
-            {
-                return BadRequest(new
+                if (order.Payment.PaymentMethod == PaymentMethod.CashOnDelivery)
                 {
-                    message =
-                        "Refund request failed.",
+                    // For COD, just mark the payment as cancelled
+                    order.Payment.PaymentStatus = PaymentStatus.Cancelled;
+                }
+                else
+                {
+                    // For Online Payments
+                    if (order.Payment.PaymentStatus == PaymentStatus.Paid)
+                    {
+                        // Actually initiate the SSLCommerz refund
+                        var refundResult = await _paymentService.InitiateRefundAsync(order.Payment, refundReason);
 
-                    status =
-                        refundResult.Status,
+                        if (!refundResult.Success)
+                        {
+                            // Return the error but keep order cancelled to prevent food prep
+                            return BadRequest(new { message = "Order cancelled, but automated refund failed. Contact support.", error = refundResult.ErrorReason });
+                        }
 
-                    error =
-                        refundResult.ErrorReason
-                });
+                        order.Payment.RefundReferenceId = refundResult.RefundReferenceId;
+                        order.Payment.RefundStatus = refundResult.Status;
+                        order.Payment.RefundDate = DateTime.UtcNow;
+                    }
+                    else
+                    {
+                        // If online payment but not yet paid (e.g. Pending), just cancel the payment record
+                        order.Payment.PaymentStatus = PaymentStatus.Cancelled;
+                    }
+                }
             }
-
-            // Save refund information.
-            payment.RefundReferenceId =
-                refundResult.RefundReferenceId;
-
-            payment.RefundStatus =
-                refundResult.Status;
-
-            payment.RefundDate =
-                DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
             return Ok(new
             {
-                message =
-                    "Refund request submitted successfully.",
-
-                orderId,
-
-                amount =
-                    payment.Amount,
-
-                refundStatus =
-                    payment.RefundStatus,
-
-                refundReferenceId =
-                    payment.RefundReferenceId,
-
-                bankTransactionId =
-                    payment.BankTransactionId
+                message = "Order cancelled successfully.",
+                orderId = order.Id,
+                refundStatus = order.Payment?.RefundStatus ?? "N/A"
             });
         }
 

@@ -6,5 +6,9 @@ namespace FoodDelivery.Core.DTOs
     {
         [Required]
         public int RestaurantId { get; set; }
+
+        [Required]
+        [StringLength(500, ErrorMessage = "Delivery address is too long.")]
+        public string DeliveryAddress { get; set; } = string.Empty;
     }
 }

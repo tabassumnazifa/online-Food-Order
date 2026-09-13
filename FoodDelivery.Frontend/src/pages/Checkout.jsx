@@ -12,6 +12,7 @@ function Checkout() {
   );
 
   const [paymentMethod, setPaymentMethod] = useState("1");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
   const [loading, setLoading] = useState(true);
   const [placingOrder, setPlacingOrder] = useState(false);
   const [error, setError] = useState("");
@@ -101,7 +102,7 @@ function Checkout() {
   const totalItems = cart.reduce(
     (total, item) =>
       total + Number(item.quantity || 0),
-    0
+      0
   );
 
   const handlePlaceOrder = async () => {
@@ -112,6 +113,12 @@ function Checkout() {
 
     if (!cart.length) {
       alert("Your cart is empty.");
+      return;
+    }
+
+    // FIX: Validate the delivery address before placing the order
+    if (!deliveryAddress.trim()) {
+      alert("Please enter your delivery address.");
       return;
     }
 
@@ -127,6 +134,7 @@ function Checkout() {
         `${API_URL}/Order/checkout`,
         {
           restaurantId: restaurantId,
+          deliveryAddress: deliveryAddress.trim(),
         },
         {
           headers: {
@@ -426,6 +434,10 @@ function Checkout() {
                 type="text"
                 placeholder="Enter your delivery address"
                 className="customer-checkout-input"
+                value={deliveryAddress}
+                onChange={(e) =>
+                  setDeliveryAddress(e.target.value)
+                }
               />
             </div>
 

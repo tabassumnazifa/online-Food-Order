@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -9,6 +8,7 @@ function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [cancelling, setCancelling] = useState(null);
 
   useEffect(() => {
     fetchOrders();
@@ -61,6 +61,39 @@ function Orders() {
   };
 
   // =========================
+  // CANCEL ORDER & REFUND
+  // =========================
+  const handleCancelOrder = async (orderId) => {
+    const token = localStorage.getItem("token");
+    
+    if (!window.confirm("Are you sure you want to cancel this order? If you paid online, a refund will be initiated.")) {
+      return;
+    }
+
+    try {
+      setCancelling(orderId);
+      
+      await axios.post(
+        `http://localhost:5079/api/Payment/refund/${orderId}`,
+        null,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      alert("Order cancelled and refund initiated successfully!");
+      await fetchOrders();
+    } catch (error) {
+      console.error("Cancel order error:", error);
+      alert(error.response?.data?.message || "Failed to cancel order.");
+    } finally {
+      setCancelling(null);
+    }
+  };
+
+  // =========================
   // STATUS HELPERS
   // =========================
   const normalizeStatus = (status) => {
@@ -89,6 +122,15 @@ function Orders() {
 
   const isDelivered = (status) => {
     return normalizeStatus(status) === "delivered";
+  };
+
+  const canCancel = (status) => {
+    const normalized = normalizeStatus(status);
+    return (
+      normalized === "pending" ||
+      normalized === "accepted" ||
+      normalized === "preparing"
+    );
   };
 
   // =========================
@@ -278,6 +320,8 @@ function Orders() {
                 const delivered = isDelivered(
                   order.status
                 );
+
+                const showCancelButton = canCancel(order.status);
 
                 return (
                   <article
@@ -470,6 +514,34 @@ function Orders() {
                           )}
 
                         </div>
+                      </div>
+                    )}
+
+                    {/* =========================
+                        CANCEL BUTTON
+                        ========================= */}
+                    {showCancelButton && (
+                      <div className="customer-order-actions">
+                        <button
+                          type="button"
+                          className="customer-cancel-btn"
+                          onClick={() => handleCancelOrder(order.orderId)}
+                          disabled={cancelling === order.orderId}
+                          style={{
+                            backgroundColor: "#dc3545",
+                            color: "white",
+                            border: "none",
+                            padding: "10px 20px",
+                            borderRadius: "5px",
+                            cursor: "pointer",
+                            fontWeight: "600",
+                            marginTop: "15px"
+                          }}
+                        >
+                          {cancelling === order.orderId
+                            ? "Cancelling..."
+                            : "❌ Cancel Order & Request Refund"}
+                        </button>
                       </div>
                     )}
 

@@ -59,7 +59,8 @@ namespace FoodDelivery.API.Controllers
                 RestaurantId = model.RestaurantId,
                 TotalAmount = model.TotalAmount,
                 OrderDate = DateTime.UtcNow,
-                Status = "Pending"
+                // FIX 1: Use the proper Enum instead of a string
+                OrderStatus = OrderStatus.Pending
             };
 
             _context.Orders.Add(order);
@@ -254,7 +255,9 @@ namespace FoodDelivery.API.Controllers
                 RestaurantId = model.RestaurantId,
                 OrderDate = DateTime.UtcNow,
                 TotalAmount = totalAmount,
-                Status = "Placed"
+                // FIX 2: Save the DeliveryAddress and use the proper Enum
+                DeliveryAddress = model.DeliveryAddress,
+                OrderStatus = OrderStatus.Pending
             };
 
             _context.Orders.Add(order);
