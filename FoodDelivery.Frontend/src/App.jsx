@@ -4,6 +4,7 @@ import { Routes, Route } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import ChatBot from "./components/ChatBot"; // ADDED
 
 // =========================
 // Customer Pages
@@ -43,8 +44,9 @@ import RestaurantDashboard from "./pages/RestaurantDashboard";
 import ManageFoods from "./pages/ManageFoods";
 import RestaurantOrders from "./pages/RestaurantOrders";
 import CreateOffer from "./pages/CreateOffer";
-import ManageOffers from "./pages/ManageOffers"; // ADDED
-import EditRestaurant from "./pages/EditRestaurant"; // ADDED
+import ManageOffers from "./pages/ManageOffers";
+import EditRestaurant from "./pages/EditRestaurant";
+import Verification from "./pages/Verification";
 
 // =========================
 // Rider Pages
@@ -64,6 +66,7 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminOrders from "./pages/AdminOrders";
 import AdminOffers from "./pages/AdminOffers";
 import AdminPayments from "./pages/AdminPayments";
+import AdminPendingApprovals from "./pages/AdminPendingApprovals";
 
 // =========================
 // App
@@ -199,16 +202,19 @@ function App() {
             element={<CreateOffer />}
           />
 
-          {/* ADDED: Manage Offers Route */}
           <Route
             path="/restaurant/offers/manage"
             element={<ManageOffers />}
           />
 
-          {/* ADDED: Edit Restaurant Route */}
           <Route
             path="/restaurant/edit"
             element={<EditRestaurant />}
+          />
+
+          <Route
+            path="/restaurant/verify"
+            element={<Verification />}
           />
 
           {/* =========================
@@ -240,6 +246,11 @@ function App() {
           />
 
           <Route
+            path="/admin/approvals"
+            element={<AdminPendingApprovals />}
+          />
+
+          <Route
             path="/admin/restaurants"
             element={<AdminRestaurants />}
           />
@@ -268,6 +279,9 @@ function App() {
       </main>
 
       <Footer />
+
+      {/* ADDED: The Chatbot floats on every page! */}
+      <ChatBot />
     </>
   );
 }

@@ -44,7 +44,6 @@ namespace FoodDelivery.API.Controllers
             if (restaurant == null)
                 return NotFound("Restaurant not found.");
 
-            // Prevent customers from ordering from suspended restaurants
             if (restaurant.IsSuspended)
             {
                 return BadRequest(
@@ -125,7 +124,6 @@ namespace FoodDelivery.API.Controllers
             if (order == null)
                 return NotFound("Order not found.");
 
-            // FIX: Prevent IDOR - Users can only view their own orders
             if (!isAdmin && order.CustomerId != currentUserId)
                 return Forbid();
 
@@ -162,7 +160,7 @@ namespace FoodDelivery.API.Controllers
         }
 
         // =========================
-        // CANCEL ORDER (With Refund Logic)
+        // CANCEL ORDER (KITCHEN LOCK POLICY)
         // =========================
         [HttpPost("cancel/{orderId}")]
         [Authorize(Roles = Roles.Customer)]
@@ -177,19 +175,30 @@ namespace FoodDelivery.API.Controllers
             if (order == null)
                 return NotFound("Order not found.");
 
-            // FIX: State machine validation - Can only cancel if not yet out for delivery
-            if (order.OrderStatus == OrderStatus.OutForDelivery ||
-                order.OrderStatus == OrderStatus.Delivered)
-            {
-                return BadRequest("Order can no longer be cancelled as it is already out for delivery or delivered.");
-            }
-
             if (order.OrderStatus == OrderStatus.Cancelled)
-            {
                 return BadRequest("Order is already cancelled.");
+
+            // ==========================================
+            // 🛡️ KITCHEN LOCK POLICY:
+            // • Pending   → free cancellation + full refund
+            // • Accepted  → free cancellation + full refund
+            //               (kitchen has not started cooking yet)
+            // • Preparing and beyond → LOCKED.
+            //   No cancellation, no refund, because the
+            //   restaurant has already spent money and
+            //   labor on the food.
+            // ==========================================
+            if (order.OrderStatus != OrderStatus.Pending &&
+                order.OrderStatus != OrderStatus.Accepted)
+            {
+                return BadRequest(
+                    "Cancellation is locked once the restaurant starts preparing your order. " +
+                    "The kitchen has already invested in your food. " +
+                    "Please contact support for emergencies."
+                );
             }
 
-            // FIX: If payment was made, initiate refund
+            // Full refund (only reachable in Pending / Accepted stages)
             if (order.Payment != null && order.Payment.PaymentStatus == PaymentStatus.Paid)
             {
                 var refundResult = await _paymentService.InitiateRefundAsync(
@@ -199,8 +208,6 @@ namespace FoodDelivery.API.Controllers
 
                 if (refundResult.Success)
                 {
-                    // Note: Ensure 'Refunded' exists in your PaymentStatus enum. 
-                    // If not, change this to PaymentStatus.Cancelled
                     order.Payment.PaymentStatus = PaymentStatus.Refunded; 
                     order.Payment.RefundReferenceId = refundResult.RefundReferenceId;
                 }
@@ -239,7 +246,6 @@ namespace FoodDelivery.API.Controllers
             if (restaurant == null)
                 return NotFound("Restaurant not found.");
 
-            // Prevent checkout from suspended restaurants
             if (restaurant.IsSuspended)
             {
                 return BadRequest(
@@ -256,7 +262,6 @@ namespace FoodDelivery.API.Controllers
             if (!cartItems.Any())
                 return BadRequest("Your cart is empty.");
 
-            // FIX: Validate food availability and price before checkout
             foreach (var cartItem in cartItems)
             {
                 if (cartItem.Food == null)
@@ -285,7 +290,9 @@ namespace FoodDelivery.API.Controllers
 
                 if (offer != null)
                 {
-                    decimal discountAmount = totalAmount * (offer.DiscountPercentage / 100);
+                    // 🚨 FIX: Added 'm' to 100 to prevent integer division!
+                    decimal discountAmount = totalAmount * ((decimal)offer.DiscountPercentage / 100m);
+                    
                     if (offer.MaximumDiscount.HasValue && offer.MaximumDiscount.Value > 0 && discountAmount > offer.MaximumDiscount.Value)
                     {
                         discountAmount = offer.MaximumDiscount.Value;
@@ -357,7 +364,6 @@ namespace FoodDelivery.API.Controllers
             if (!Enum.TryParse<OrderStatus>(model.Status, true, out var newStatus))
                 return BadRequest($"Invalid order status: '{model.Status}'.");
 
-            // FIX: Validate state transitions
             var validTransition = ValidateStatusTransition(order.OrderStatus, newStatus, isAdmin, currentUserId, order);
 
             if (!validTransition)
@@ -386,11 +392,9 @@ namespace FoodDelivery.API.Controllers
             string currentUserId,
             Order order)
         {
-            // Admin can override any status
             if (isAdmin)
                 return true;
 
-            // Standard state machine flow
             return (currentStatus == OrderStatus.Pending && newStatus == OrderStatus.Accepted) ||
                    (currentStatus == OrderStatus.Accepted && newStatus == OrderStatus.Preparing) ||
                    (currentStatus == OrderStatus.Preparing && newStatus == OrderStatus.ReadyForPickup) ||

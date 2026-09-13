@@ -5,7 +5,9 @@ using FoodDelivery.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace FoodDelivery.API.Controllers
 {
@@ -22,7 +24,7 @@ namespace FoodDelivery.API.Controllers
         }
 
         // =========================
-        // CREATE RESTAURANT
+        // CREATE RESTAURANT (Auto-Suspended)
         // =========================
         [HttpPost("create")]
         public async Task<IActionResult> CreateRestaurant(
@@ -49,16 +51,152 @@ namespace FoodDelivery.API.Controllers
                 Description = model.Description,
                 Address = model.Address,
                 Phone = model.Phone,
-                OwnerId = ownerId
+                OwnerId = ownerId,
+                
+                // ==========================================
+                // FRAUD PREVENTION:
+                // Every new restaurant starts SUSPENDED.
+                // It only goes live after Admin verifies
+                // the owner's NID + Trade License documents.
+                // ==========================================
+                IsSuspended = true,
+                SuspensionReason = "Pending Admin Verification: Owner must upload NID copy and Restaurant Trade License.",
+                SuspendedAt = DateTime.UtcNow
             };
 
             _context.Restaurants.Add(restaurant);
-
             await _context.SaveChangesAsync();
 
             return Ok(new
             {
-                Message = "Restaurant created successfully."
+                Message = "Restaurant created successfully. It is currently pending Admin verification."
+            });
+        }
+
+        // =========================
+        // UPLOAD VERIFICATION DOCUMENTS (OWNER)
+        // =========================
+        [HttpPost("upload-documents")]
+        [RequestSizeLimit(10 * 1024 * 1024)] // max 10 MB
+        public async Task<IActionResult> UploadDocuments(
+            IFormFile nidFile,
+            IFormFile licenseFile)
+        {
+            var ownerId = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(ownerId))
+                return Unauthorized();
+
+            var restaurant = await _context.Restaurants
+                .FirstOrDefaultAsync(r => r.OwnerId == ownerId);
+
+            if (restaurant == null)
+                return NotFound("Restaurant not found.");
+
+            if (nidFile == null || nidFile.Length == 0 ||
+                licenseFile == null || licenseFile.Length == 0)
+            {
+                return BadRequest(
+                    "Both NID copy and Trade License files are required.");
+            }
+
+            // Only allow images and PDFs
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".pdf" };
+
+            var nidExt = Path.GetExtension(nidFile.FileName).ToLowerInvariant();
+            var licenseExt = Path.GetExtension(licenseFile.FileName).ToLowerInvariant();
+
+            if (!allowed.Contains(nidExt) || !allowed.Contains(licenseExt))
+            {
+                return BadRequest("Only JPG, PNG or PDF files are allowed.");
+            }
+
+            // Create the uploads folder if it doesn't exist
+            var uploadsFolder = Path.Combine(
+                Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+
+            Directory.CreateDirectory(uploadsFolder);
+
+            var nidName = $"rest_{restaurant.Id}_nid{nidExt}";
+            var licenseName = $"rest_{restaurant.Id}_license{licenseExt}";
+
+            using (var stream = new FileStream(
+                Path.Combine(uploadsFolder, nidName), FileMode.Create))
+            {
+                await nidFile.CopyToAsync(stream);
+            }
+
+            using (var stream = new FileStream(
+                Path.Combine(uploadsFolder, licenseName), FileMode.Create))
+            {
+                await licenseFile.CopyToAsync(stream);
+            }
+
+            // Marker file so the Admin page knows which files exist
+            var marker = JsonSerializer.Serialize(
+                new { nid = nidName, license = licenseName });
+
+            await File.WriteAllTextAsync(
+                Path.Combine(uploadsFolder, $"rest_{restaurant.Id}_docs.json"),
+                marker);
+
+            return Ok(new
+            {
+                Message = "Documents uploaded successfully. Waiting for Admin approval.",
+                NidUrl = $"/uploads/{nidName}",
+                LicenseUrl = $"/uploads/{licenseName}"
+            });
+        }
+
+        // =========================
+        // MY VERIFICATION STATUS (OWNER)
+        // =========================
+        [HttpGet("verification-status")]
+        public async Task<IActionResult> GetVerificationStatus()
+        {
+            var ownerId = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(ownerId))
+                return Unauthorized();
+
+            var restaurant = await _context.Restaurants
+                .FirstOrDefaultAsync(r => r.OwnerId == ownerId);
+
+            if (restaurant == null)
+                return NotFound("Restaurant not found.");
+
+            var uploadsFolder = Path.Combine(
+                Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+
+            var markerPath = Path.Combine(
+                uploadsFolder, $"rest_{restaurant.Id}_docs.json");
+
+            var docsSubmitted = File.Exists(markerPath);
+
+            string? nidUrl = null;
+            string? licenseUrl = null;
+
+            if (docsSubmitted)
+            {
+                var json = await File.ReadAllTextAsync(markerPath);
+
+                using var doc = JsonDocument.Parse(json);
+
+                nidUrl = $"/uploads/{doc.RootElement.GetProperty("nid").GetString()}";
+                licenseUrl = $"/uploads/{doc.RootElement.GetProperty("license").GetString()}";
+            }
+
+            return Ok(new
+            {
+                RestaurantId = restaurant.Id,
+                RestaurantName = restaurant.Name,
+                IsSuspended = restaurant.IsSuspended,
+                SuspensionReason = restaurant.SuspensionReason,
+                DocsSubmitted = docsSubmitted,
+                NidUrl = nidUrl,
+                LicenseUrl = licenseUrl
             });
         }
 
@@ -79,9 +217,7 @@ namespace FoodDelivery.API.Controllers
                 .FirstOrDefaultAsync(r => r.OwnerId == ownerId);
 
             if (restaurant == null)
-            {
                 return NotFound("Restaurant not found.");
-            }
 
             restaurant.Name = model.Name;
             restaurant.Description = model.Description;
@@ -97,7 +233,7 @@ namespace FoodDelivery.API.Controllers
         }
 
         // =========================
-        // MY RESTAURANT
+        // MY RESTAURANT (WITH BOUNCER LOGIC)
         // =========================
         [HttpGet("my-restaurant")]
         public async Task<IActionResult> GetMyRestaurant()
@@ -116,21 +252,19 @@ namespace FoodDelivery.API.Controllers
                     Name = r.Name,
                     Description = r.Description,
                     Address = r.Address,
-                    Phone = r.Phone
+                    Phone = r.Phone,
+                    IsSuspended = r.IsSuspended // ADDED THIS LINE
                 })
                 .FirstOrDefaultAsync();
 
             if (restaurant == null)
-            {
                 return NotFound("Restaurant not found.");
-            }
 
             return Ok(restaurant);
         }
 
         // =========================
-        // GET ALL RESTAURANTS
-        // PUBLIC CUSTOMER ENDPOINT
+        // GET ALL RESTAURANTS (PUBLIC)
         // =========================
         [AllowAnonymous]
         [HttpGet("all")]
@@ -147,7 +281,6 @@ namespace FoodDelivery.API.Controllers
                     r.IsSuspended,
                     r.SuspensionReason,
                     r.SuspendedAt,
-
                     Rating = _context.Feedbacks
                         .Where(f => f.RestaurantId == r.Id)
                         .Select(f => (double?)f.Rating)
@@ -174,41 +307,18 @@ namespace FoodDelivery.API.Controllers
                 .FirstOrDefaultAsync(r => r.OwnerId == ownerId);
 
             if (restaurant == null)
-            {
                 return NotFound("Restaurant not found.");
-            }
 
             var dashboard = new RestaurantDashboardDto
             {
                 RestaurantName = restaurant.Name,
-
-                TotalFoods = await _context.Foods
-                    .CountAsync(f =>
-                        f.RestaurantId == restaurant.Id),
-
-                TotalOrders = await _context.Orders
-                    .CountAsync(o =>
-                        o.RestaurantId == restaurant.Id),
-
-                PendingOrders = await _context.Orders
-                    .CountAsync(o =>
-                        o.RestaurantId == restaurant.Id &&
-                        o.OrderStatus == OrderStatus.Pending),
-
-                CompletedOrders = await _context.Orders
-                    .CountAsync(o =>
-                        o.RestaurantId == restaurant.Id &&
-                        o.OrderStatus == OrderStatus.Delivered),
-
-                // FIX: Calculate revenue only for orders that actually have a "Paid" status.
-                // This matches the Admin dashboard logic and prevents counting unpaid COD orders.
+                TotalFoods = await _context.Foods.CountAsync(f => f.RestaurantId == restaurant.Id),
+                TotalOrders = await _context.Orders.CountAsync(o => o.RestaurantId == restaurant.Id),
+                PendingOrders = await _context.Orders.CountAsync(o => o.RestaurantId == restaurant.Id && o.OrderStatus == OrderStatus.Pending),
+                CompletedOrders = await _context.Orders.CountAsync(o => o.RestaurantId == restaurant.Id && o.OrderStatus == OrderStatus.Delivered),
                 TotalRevenue = await _context.Orders
-                    .Where(o =>
-                        o.RestaurantId == restaurant.Id &&
-                        o.Payment != null &&
-                        o.Payment.PaymentStatus == PaymentStatus.Paid)
-                    .SumAsync(o =>
-                        (decimal?)o.TotalAmount) ?? 0
+                    .Where(o => o.RestaurantId == restaurant.Id && o.Payment != null && o.Payment.PaymentStatus == PaymentStatus.Paid)
+                    .SumAsync(o => (decimal?)o.TotalAmount) ?? 0
             };
 
             return Ok(dashboard);
@@ -230,13 +340,10 @@ namespace FoodDelivery.API.Controllers
                 .FirstOrDefaultAsync(r => r.OwnerId == ownerId);
 
             if (restaurant == null)
-            {
                 return NotFound("Restaurant not found.");
-            }
 
             var orders = await _context.Orders
-                .Where(o =>
-                    o.RestaurantId == restaurant.Id)
+                .Where(o => o.RestaurantId == restaurant.Id)
                 .OrderByDescending(o => o.OrderDate)
                 .Select(o => new RestaurantOrderDto
                 {
@@ -269,56 +376,29 @@ namespace FoodDelivery.API.Controllers
                 .FirstOrDefaultAsync(r => r.OwnerId == ownerId);
 
             if (restaurant == null)
-            {
                 return NotFound("Restaurant not found.");
-            }
 
             var order = await _context.Orders
-                .FirstOrDefaultAsync(o =>
-                    o.Id == orderId &&
-                    o.RestaurantId == restaurant.Id);
+                .FirstOrDefaultAsync(o => o.Id == orderId && o.RestaurantId == restaurant.Id);
 
             if (order == null)
-            {
                 return NotFound("Order not found.");
-            }
 
             if (model == null || string.IsNullOrWhiteSpace(model.Status))
-            {
                 return BadRequest("Order status is required.");
-            }
 
-            if (!Enum.TryParse<OrderStatus>(
-                    model.Status,
-                    true,
-                    out var newStatus))
-            {
-                return BadRequest(
-                    $"Invalid order status: '{model.Status}'.");
-            }
+            if (!Enum.TryParse<OrderStatus>(model.Status, true, out var newStatus))
+                return BadRequest($"Invalid order status: '{model.Status}'.");
 
-            // =========================
-            // RESTAURANT STATUS FLOW
-            // =========================
             var validTransition =
-                (order.OrderStatus == OrderStatus.Pending &&
-                 newStatus == OrderStatus.Accepted) ||
-
-                (order.OrderStatus == OrderStatus.Accepted &&
-                 newStatus == OrderStatus.Preparing) ||
-
-                (order.OrderStatus == OrderStatus.Preparing &&
-                 newStatus == OrderStatus.ReadyForPickup);
+                (order.OrderStatus == OrderStatus.Pending && newStatus == OrderStatus.Accepted) ||
+                (order.OrderStatus == OrderStatus.Accepted && newStatus == OrderStatus.Preparing) ||
+                (order.OrderStatus == OrderStatus.Preparing && newStatus == OrderStatus.ReadyForPickup);
 
             if (!validTransition)
-            {
-                return BadRequest(
-                    $"Cannot change restaurant order status " +
-                    $"from '{order.OrderStatus}' to '{newStatus}'.");
-            }
+                return BadRequest($"Cannot change restaurant order status from '{order.OrderStatus}' to '{newStatus}'.");
 
             order.OrderStatus = newStatus;
-
             await _context.SaveChangesAsync();
 
             return Ok(new

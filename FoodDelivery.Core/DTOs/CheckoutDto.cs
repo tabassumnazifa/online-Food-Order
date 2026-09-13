@@ -7,11 +7,11 @@ namespace FoodDelivery.Core.DTOs
         [Required]
         public int RestaurantId { get; set; }
 
+        // ADDED: So the backend accepts the address from the frontend
         [Required]
-        [StringLength(500, ErrorMessage = "Delivery address is too long.")]
         public string DeliveryAddress { get; set; } = string.Empty;
 
-        // NEW: Optional coupon code from the customer
+        // ADDED: So the backend accepts the coupon code from the frontend
         public string? CouponCode { get; set; }
     }
 }
