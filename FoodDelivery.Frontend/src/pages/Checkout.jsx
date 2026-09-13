@@ -10,6 +10,15 @@ function Checkout() {
   const [restaurantId, setRestaurantId] = useState(location.state?.restaurantId || null);
   const [paymentMethod, setPaymentMethod] = useState("1");
   const [deliveryAddress, setDeliveryAddress] = useState("");
+
+  // =========================
+  // COUPON STATES
+  // =========================
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState("");
+
   const [loading, setLoading] = useState(true);
   const [placingOrder, setPlacingOrder] = useState(false);
   const [error, setError] = useState("");
@@ -110,7 +119,11 @@ function Checkout() {
           restaurantId: restaurantId,
           cartTotal: calculateTotal(),
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       setAppliedCoupon(response.data);
@@ -118,10 +131,28 @@ function Checkout() {
       console.error("Coupon error:", err);
       setAppliedCoupon(null);
       setCouponError(
-        err.response?.data?.message || (typeof err.response?.data === "string" ? err.response.data : "Invalid or expired coupon code.")
+        err.response?.data?.message ||
+          (typeof err.response?.data === "string"
+            ? err.response.data
+            : "Invalid or expired coupon code.")
       );
     } finally {
       setApplyingCoupon(false);
+    }
+  };
+    if (!restaurantId) {
+      setCouponError("Restaurant information is missing.");
+      return;
+    }
+
+    try {
+      setApplyingCoupon(true);
+      setCouponError("");
+
+    if (!deliveryAddress.trim()) {
+      alert("Please enter your delivery address.");
+      return;
+    }
     }
   };
 
@@ -146,13 +177,17 @@ function Checkout() {
       setPlacingOrder(true);
       setError("");
 
-      // STEP 1: CREATE ORDER (Sending Coupon Code!)
+      // ==========================================
+      // STEP 1: CREATE ORDER (with coupon)
+      // ==========================================
       const orderResponse = await axios.post(
         `${API_URL}/Order/checkout`,
         {
           restaurantId: restaurantId,
           deliveryAddress: deliveryAddress.trim(),
-          couponCode: appliedCoupon ? appliedCoupon.couponCode : null, // Passes the validated code to backend
+          couponCode: appliedCoupon
+            ? appliedCoupon.couponCode
+            : null,
         },
         { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
@@ -220,7 +255,9 @@ function Checkout() {
   }
 
   const total = calculateTotal();
-  const finalTotal = appliedCoupon ? appliedCoupon.finalTotal : total;
+  const finalTotal = appliedCoupon
+    ? appliedCoupon.finalTotal
+    : total;
 
   return (
     <main className="customer-checkout-page">
@@ -298,8 +335,116 @@ function Checkout() {
             </div>
 
             {/* =========================
-                COUPON CODE
+                COUPON CODE (NEW)
                 ========================= */}
+
+            <div className="customer-checkout-card">
+
+              <div className="customer-checkout-card-heading">
+                <div>
+                  <span className="customer-page-eyebrow">
+                    SAVINGS
+                  </span>
+
+                  <h2>Have a Coupon?</h2>
+                </div>
+
+                <div className="customer-checkout-heading-icon">
+                  🏷️
+                </div>
+              </div>
+
+              {appliedCoupon ? (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    backgroundColor: "#d4edda",
+                    color: "#155724",
+                    padding: "12px 16px",
+                    borderRadius: "8px",
+                    fontWeight: "600",
+                  }}
+                >
+                  <span>
+                    ✓ {appliedCoupon.couponCode} applied —
+                    you saved ৳{appliedCoupon.discountAmount}!
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoupon}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "#155724",
+                      cursor: "pointer",
+                      fontWeight: "700",
+                      fontSize: "1rem",
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "10px",
+                    }}
+                  >
+                    <input
+                      type="text"
+                      placeholder="Enter coupon code (e.g. PIZZA20)"
+                      className="customer-checkout-input"
+                      value={couponCode}
+                      onChange={(e) =>
+                        setCouponCode(
+                          e.target.value.toUpperCase()
+                        )
+                      }
+                      style={{ flex: 1 }}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      disabled={applyingCoupon}
+                      style={{
+                        padding: "10px 20px",
+                        backgroundColor: "#007bff",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        fontWeight: "600",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {applyingCoupon
+                        ? "Applying..."
+                        : "Apply"}
+                    </button>
+                  </div>
+
+                  {couponError && (
+                    <p
+                      style={{
+                        color: "#dc3545",
+                        marginTop: "8px",
+                        fontWeight: "600",
+                      }}
+                    >
+                      {couponError}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* PAYMENT METHOD */}
             <div className="customer-checkout-card">
               <div className="customer-checkout-card-heading">
                 <div>
@@ -375,19 +520,30 @@ function Checkout() {
               </div>
               {appliedCoupon && (
                 <div>
-                  <span>Discount ({appliedCoupon.discountPercentage}%)</span>
-                  <strong style={{ color: "#28a745" }}>− ৳{appliedCoupon.discountAmount.toLocaleString()}</strong>
+                  <span>
+                    Discount ({appliedCoupon.discountPercentage}%)
+                  </span>
+
+                  <strong style={{ color: "#28a745" }}>
+                    − ৳{appliedCoupon.discountAmount.toLocaleString()}
+                  </strong>
                 </div>
               )}
+
               <div>
                 <span>Delivery fee</span>
-                <strong className="customer-checkout-free">Free</strong>
+
+                <strong className="customer-checkout-free">
+                  Free
+                </strong>
               </div>
             </div>
             <div className="customer-checkout-divider"></div>
             <div className="customer-checkout-total">
               <span>Total</span>
-              <strong>৳{finalTotal.toLocaleString()}</strong>
+              <strong>
+                ৳{finalTotal.toLocaleString()}
+              </strong>
             </div>
             <button type="button" className="customer-place-order-btn" onClick={handlePlaceOrder} disabled={placingOrder}>
               {placingOrder ? (<><span className="customer-checkout-spinner"></span> Processing...</>) : (<>Place Order <span>→</span></>)}

@@ -1,3 +1,4 @@
+using System;
 using FoodDelivery.Core.DTOs;
 using FoodDelivery.Core.Enums;
 using FoodDelivery.Core.Models;
@@ -106,7 +107,8 @@ namespace FoodDelivery.API.Controllers
         // =====================================
         [HttpPost("validate")]
         [Authorize(Roles = Roles.Customer)]
-        public async Task<IActionResult> ValidateCoupon([FromBody] ValidateCouponDto dto)
+        public async Task<IActionResult> ValidateCoupon(
+            [FromBody] ValidateCouponDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.CouponCode) || dto.RestaurantId <= 0)
             {
@@ -121,7 +123,7 @@ namespace FoodDelivery.API.Controllers
                     o.IsActive &&
                     o.StartDate <= today &&
                     o.EndDate >= today &&
-                    (o.RestaurantId == null || o.RestaurantId == dto.RestaurantId)
+                    (o.RestaurantId == null || o.RestaurantId == dto.RestaurantId) // Platform or specific restaurant
                 );
 
             if (offer == null)
