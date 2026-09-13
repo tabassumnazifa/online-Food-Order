@@ -532,7 +532,7 @@ namespace FoodDelivery.API.Controllers
         }
 
         // ==========================================================
-        // CANCEL ORDER & REFUND CUSTOMER PAYMENT (FIXED)
+        // CANCEL ORDER & REFUND CUSTOMER PAYMENT (KITCHEN LOCK ENFORCED)
         // ==========================================================
 
         [HttpPost("refund/{orderId}")]
@@ -558,11 +558,13 @@ namespace FoodDelivery.API.Controllers
                 return NotFound("Order not found.");
             }
 
-            // Prevent cancelling orders that are already on the way
-            if (order.OrderStatus == OrderStatus.Delivered || 
-                order.OrderStatus == OrderStatus.OutForDelivery)
+            // 🛡️ KITCHEN LOCK POLICY (BACKEND ENFORCEMENT):
+            // We block refunds/cancellations the moment the kitchen
+            // starts cooking (Preparing stage and beyond).
+            if (order.OrderStatus != OrderStatus.Pending && 
+                order.OrderStatus != OrderStatus.Accepted)
             {
-                return BadRequest("Cannot cancel an order that is already out for delivery or delivered.");
+                return BadRequest("Cancellation is locked once the restaurant starts preparing your order.");
             }
 
             if (order.OrderStatus == OrderStatus.Cancelled)

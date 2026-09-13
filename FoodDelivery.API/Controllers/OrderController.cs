@@ -160,7 +160,7 @@ namespace FoodDelivery.API.Controllers
         }
 
         // =========================
-        // CANCEL ORDER (With Refund Logic)
+        // CANCEL ORDER (KITCHEN LOCK POLICY)
         // =========================
         [HttpPost("cancel/{orderId}")]
         [Authorize(Roles = Roles.Customer)]
@@ -175,17 +175,30 @@ namespace FoodDelivery.API.Controllers
             if (order == null)
                 return NotFound("Order not found.");
 
-            if (order.OrderStatus == OrderStatus.OutForDelivery ||
-                order.OrderStatus == OrderStatus.Delivered)
-            {
-                return BadRequest("Order can no longer be cancelled as it is already out for delivery or delivered.");
-            }
-
             if (order.OrderStatus == OrderStatus.Cancelled)
-            {
                 return BadRequest("Order is already cancelled.");
+
+            // ==========================================
+            // 🛡️ KITCHEN LOCK POLICY:
+            // • Pending   → free cancellation + full refund
+            // • Accepted  → free cancellation + full refund
+            //               (kitchen has not started cooking yet)
+            // • Preparing and beyond → LOCKED.
+            //   No cancellation, no refund, because the
+            //   restaurant has already spent money and
+            //   labor on the food.
+            // ==========================================
+            if (order.OrderStatus != OrderStatus.Pending &&
+                order.OrderStatus != OrderStatus.Accepted)
+            {
+                return BadRequest(
+                    "Cancellation is locked once the restaurant starts preparing your order. " +
+                    "The kitchen has already invested in your food. " +
+                    "Please contact support for emergencies."
+                );
             }
 
+            // Full refund (only reachable in Pending / Accepted stages)
             if (order.Payment != null && order.Payment.PaymentStatus == PaymentStatus.Paid)
             {
                 var refundResult = await _paymentService.InitiateRefundAsync(
@@ -278,7 +291,6 @@ namespace FoodDelivery.API.Controllers
                 if (offer != null)
                 {
                     // 🚨 FIX: Added 'm' to 100 to prevent integer division!
-                    // (e.g. 20 / 100m = 0.20, instead of 20 / 100 = 0)
                     decimal discountAmount = totalAmount * ((decimal)offer.DiscountPercentage / 100m);
                     
                     if (offer.MaximumDiscount.HasValue && offer.MaximumDiscount.Value > 0 && discountAmount > offer.MaximumDiscount.Value)
