@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
+using System.Text.Json;
 
 namespace FoodDelivery.API.Controllers
 {
@@ -1137,6 +1139,55 @@ namespace FoodDelivery.API.Controllers
             };
 
             return Ok(summary);
+        }
+
+
+        // =====================================================
+        // GET PENDING VERIFICATIONS (ADMIN)
+        // =====================================================
+        [HttpGet("pending-verifications")]
+        public async Task<IActionResult> GetPendingVerifications()
+        {
+            var uploadsFolder = Path.Combine(
+                Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+
+            var pendingList = new List<object>();
+
+            var suspendedRestaurants = await _context.Restaurants
+                .Include(r => r.Owner)
+                .Where(r => r.IsSuspended)
+                .ToListAsync();
+
+            foreach (var restaurant in suspendedRestaurants)
+            {
+                var markerPath = Path.Combine(
+                    uploadsFolder, $"rest_{restaurant.Id}_docs.json");
+
+                if (System.IO.File.Exists(markerPath))
+                {
+                    var json = await System.IO.File.ReadAllTextAsync(markerPath);
+                    using var doc = System.Text.Json.JsonDocument.Parse(json);
+
+                    var nidFile = doc.RootElement.GetProperty("nid").GetString();
+                    var licenseFile = doc.RootElement.GetProperty("license").GetString();
+
+                    pendingList.Add(new
+                    {
+                        RestaurantId = restaurant.Id,
+                        RestaurantName = restaurant.Name,
+                        OwnerName = restaurant.Owner?.FullName ?? "Unknown",
+                        OwnerEmail = restaurant.Owner?.Email ?? "Unknown",
+                        Address = restaurant.Address,
+                        Phone = restaurant.Phone,
+                        SuspensionReason = restaurant.SuspensionReason,
+                        SuspendedAt = restaurant.SuspendedAt,
+                        NidUrl = $"/uploads/{nidFile}",
+                        LicenseUrl = $"/uploads/{licenseFile}"
+                    });
+                }
+            }
+
+            return Ok(pendingList);
         }
     }
 }

@@ -212,6 +212,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// ==========================================
+// ADDED: Allow serving uploaded files (NID, Trade License)
+// ==========================================
+app.UseStaticFiles();
+
 app.UseCors("AllowReactApp");
 
 app.UseAuthentication();

@@ -233,7 +233,7 @@ namespace FoodDelivery.API.Controllers
         }
 
         // =========================
-        // MY RESTAURANT
+        // MY RESTAURANT (WITH BOUNCER LOGIC)
         // =========================
         [HttpGet("my-restaurant")]
         public async Task<IActionResult> GetMyRestaurant()
@@ -252,7 +252,8 @@ namespace FoodDelivery.API.Controllers
                     Name = r.Name,
                     Description = r.Description,
                     Address = r.Address,
-                    Phone = r.Phone
+                    Phone = r.Phone,
+                    IsSuspended = r.IsSuspended // ADDED THIS LINE
                 })
                 .FirstOrDefaultAsync();
 

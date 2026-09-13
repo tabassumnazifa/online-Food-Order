@@ -11,5 +11,6 @@
         public string Address { get; set; } = string.Empty;
 
         public string Phone { get; set; } = string.Empty;
+        public bool IsSuspended { get; set; }
     }
 }
