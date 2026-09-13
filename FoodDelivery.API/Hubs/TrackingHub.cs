@@ -1,17 +1,24 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using System.Threading.Tasks;
 
 namespace FoodDelivery.API.Hubs
 {
+    // Only logged-in users (Riders/Customers) can connect to this hub
+    [Authorize] 
     public class TrackingHub : Hub
     {
-        public override async Task OnConnectedAsync()
+        // The rider calls this to join a private "room" for a specific order
+        public async Task JoinOrderGroup(int orderId)
         {
-            await base.OnConnectedAsync();
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"Order_{orderId}");
         }
 
-        public override async Task OnDisconnectedAsync(Exception? exception)
+        // The rider calls this every few seconds with their new GPS coordinates
+        public async Task UpdateRiderLocation(int orderId, double latitude, double longitude)
         {
-            await base.OnDisconnectedAsync(exception);
+            // Broadcast ONLY to the customer(s) watching this specific order group
+            await Clients.Group($"Order_{orderId}").SendAsync("ReceiveRiderLocation", latitude, longitude);
         }
     }
 }
