@@ -137,7 +137,8 @@ namespace FoodDelivery.API.Controllers
             var marker = JsonSerializer.Serialize(
                 new { nid = nidName, license = licenseName });
 
-            await File.WriteAllTextAsync(
+            // ✅ FIX: Explicitly use System.IO.File to avoid conflict with ControllerBase.File
+            await System.IO.File.WriteAllTextAsync(
                 Path.Combine(uploadsFolder, $"rest_{restaurant.Id}_docs.json"),
                 marker);
 
@@ -173,14 +174,16 @@ namespace FoodDelivery.API.Controllers
             var markerPath = Path.Combine(
                 uploadsFolder, $"rest_{restaurant.Id}_docs.json");
 
-            var docsSubmitted = File.Exists(markerPath);
+            // ✅ FIX: Explicitly use System.IO.File
+            var docsSubmitted = System.IO.File.Exists(markerPath);
 
             string? nidUrl = null;
             string? licenseUrl = null;
 
             if (docsSubmitted)
             {
-                var json = await File.ReadAllTextAsync(markerPath);
+                // ✅ FIX: Explicitly use System.IO.File
+                var json = await System.IO.File.ReadAllTextAsync(markerPath);
 
                 using var doc = JsonDocument.Parse(json);
 

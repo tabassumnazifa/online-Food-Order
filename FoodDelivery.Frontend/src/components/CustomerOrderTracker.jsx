@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import * as signalR from "@microsoft/signalr";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css"; // ⚠️ CRITICAL: Leaflet CSS
+import "leaflet/dist/leaflet.css";
 
 // Fix for default Leaflet marker icons in React/Webpack
 delete L.Icon.Default.prototype._getIconUrl;
@@ -12,7 +12,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-// Custom icon for the Rider (Motorcycle)
+// Custom icon for the Rider (Motorcycle/Truck)
 const riderIcon = new L.Icon({
   iconUrl: "https://cdn-icons-png.flaticon.com/512/713/713311.png",
   iconSize: [40, 40],
@@ -28,8 +28,17 @@ const restaurantIcon = new L.Icon({
   popupAnchor: [0, -35],
 });
 
+// Custom icon for the Customer (Home/Person)
+const customerIcon = new L.Icon({
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/854/854888.png",
+  iconSize: [35, 35],
+  iconAnchor: [17, 35],
+  popupAnchor: [0, -35],
+});
+
 function CustomerOrderTracker({ orderId, status, restaurantLat = 23.8103, restaurantLng = 90.4125 }) {
   const [riderLocation, setRiderLocation] = useState(null);
+  const [customerLocation, setCustomerLocation] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState("");
   
@@ -39,7 +48,26 @@ function CustomerOrderTracker({ orderId, status, restaurantLat = 23.8103, restau
   const normalizedStatus = status?.toLowerCase().replace(/\s+/g, "");
   const isTrackingEligible = ["preparing", "readyforpickup", "outfordelivery", "delivered"].includes(normalizedStatus);
 
-  // 1. Establish SignalR Connection to listen for rider updates
+  // 1. Get Customer's Location (Browser Geolocation)
+  useEffect(() => {
+    if (isTrackingEligible && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCustomerLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (err) => {
+          console.warn("Customer location denied or unavailable:", err);
+          // Default to restaurant location if denied
+          setCustomerLocation({ lat: restaurantLat, lng: restaurantLng });
+        }
+      );
+    }
+  }, [isTrackingEligible, restaurantLat, restaurantLng]);
+
+  // 2. Establish SignalR Connection to listen for rider updates
   useEffect(() => {
     if (isTrackingEligible && !connectionRef.current) {
       const token = localStorage.getItem("token");
@@ -83,13 +111,43 @@ function CustomerOrderTracker({ orderId, status, restaurantLat = 23.8103, restau
     };
   }, [isTrackingEligible, orderId]);
 
+  // Calculate map center based on available locations
+  const getMapCenter = () => {
+    if (riderLocation && customerLocation) {
+      // Center between rider and customer
+      return [
+        (riderLocation.lat + customerLocation.lat) / 2,
+        (riderLocation.lng + customerLocation.lng) / 2
+      ];
+    }
+    return [restaurantLat, restaurantLng];
+  };
+
+  // Calculate distance between two points (Haversine formula)
+  const calculateDistance = (lat1, lng1, lat2, lng2) => {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return (R * c).toFixed(1);
+  };
+
   if (!isTrackingEligible) {
     return (
       <div style={{ padding: "20px", background: "#f3f4f6", borderRadius: "12px", textAlign: "center" }}>
-        <p>🕒 Live tracking will be available once the restaurant starts preparing your order.</p>
+        <p> Live tracking will be available once the restaurant starts preparing your order.</p>
       </div>
     );
   }
+
+  const mapCenter = getMapCenter();
+  const distance = riderLocation && customerLocation 
+    ? calculateDistance(riderLocation.lat, riderLocation.lng, customerLocation.lat, customerLocation.lng)
+    : null;
 
   return (
     <div style={{ marginTop: "20px" }}>
@@ -99,7 +157,7 @@ function CustomerOrderTracker({ orderId, status, restaurantLat = 23.8103, restau
       
       <div style={{ height: "400px", width: "100%", borderRadius: "12px", overflow: "hidden", border: "2px solid #e5e7eb" }}>
         <MapContainer 
-          center={[restaurantLat, restaurantLng]} 
+          center={mapCenter} 
           zoom={13} 
           style={{ height: "100%", width: "100%" }}
         >
@@ -117,18 +175,53 @@ function CustomerOrderTracker({ orderId, status, restaurantLat = 23.8103, restau
           {/* Rider Marker (Dynamic - only shows when rider starts sharing) */}
           {riderLocation && (
             <Marker position={[riderLocation.lat, riderLocation.lng]} icon={riderIcon}>
-              <Popup>🛵 Your Rider is here!</Popup>
+              <Popup>🚚 Your Rider is here!</Popup>
             </Marker>
+          )}
+
+          {/* Customer Marker (Delivery Destination) */}
+          {customerLocation && (
+            <Marker position={[customerLocation.lat, customerLocation.lng]} icon={customerIcon}>
+              <Popup> You are here (Delivery Address)</Popup>
+            </Marker>
+          )}
+
+          {/* Route Line (Rider to Customer) */}
+          {riderLocation && customerLocation && (
+            <Polyline
+              positions={[
+                [riderLocation.lat, riderLocation.lng],
+                [customerLocation.lat, customerLocation.lng]
+              ]}
+              color="#3b82f6"
+              weight={3}
+              opacity={0.7}
+              dashArray="5, 5"
+            />
           )}
         </MapContainer>
       </div>
 
-      <div style={{ marginTop: "10px", display: "flex", gap: "15px", fontSize: "14px", color: "#4b5563" }}>
-        <span>🏪 Restaurant</span>
+      <div style={{ marginTop: "10px", display: "flex", gap: "15px", fontSize: "14px", flexWrap: "wrap" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+          <span style={{ fontSize: "1.2rem" }}>🏪</span> Restaurant
+        </span>
         {riderLocation ? (
-          <span style={{ color: "#16a34a", fontWeight: "bold" }}>🛵 Rider is moving live!</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "5px", color: "#16a34a", fontWeight: "bold" }}>
+            <span style={{ fontSize: "1.2rem" }}></span> Rider is moving live!
+          </span>
         ) : (
           <span>⏳ Waiting for rider to start sharing location...</span>
+        )}
+        {customerLocation && (
+          <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+            <span style={{ fontSize: "1.2rem" }}>📍</span> Your Location
+          </span>
+        )}
+        {distance && (
+          <span style={{ color: "#3b82f6", fontWeight: "bold" }}>
+            📏 {distance} km away
+          </span>
         )}
       </div>
     </div>

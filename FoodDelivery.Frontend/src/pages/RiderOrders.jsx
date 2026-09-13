@@ -1,7 +1,9 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+
+// ✅ 1. IMPORT THE RIDER GPS TRACKER COMPONENT
+import RiderLocationTracker from "../components/RiderLocationTracker";
 
 function RiderOrders() {
   const navigate = useNavigate();
@@ -188,7 +190,6 @@ function RiderOrders() {
       <div className="rider-orders-container">
 
         {/* Header */}
-
         <section className="rider-orders-header">
           <div>
             <p className="rider-dashboard-eyebrow">
@@ -208,7 +209,6 @@ function RiderOrders() {
         </section>
 
         {/* Toolbar */}
-
         <div className="rider-orders-toolbar">
           <div className="rider-orders-count">
             <span className="rider-orders-count-icon">
@@ -236,7 +236,6 @@ function RiderOrders() {
         </div>
 
         {/* Empty State */}
-
         {orders.length === 0 ? (
           <div className="rider-empty-card">
             <div className="rider-empty-icon">
@@ -262,6 +261,7 @@ function RiderOrders() {
           <div className="rider-orders-grid">
             {orders.map((order) => {
               const nextStatus = getNextStatus(order.status);
+              const isOutForDelivery = order.status?.toLowerCase() === "outfordelivery";
 
               return (
                 <article
@@ -269,7 +269,6 @@ function RiderOrders() {
                   key={order.orderId}
                 >
                   {/* Card Header */}
-
                   <div className="rider-order-card-top">
                     <div>
                       <span className="rider-order-label">
@@ -289,9 +288,7 @@ function RiderOrders() {
                   <div className="rider-order-divider"></div>
 
                   {/* Details */}
-
                   <div className="rider-order-details">
-
                     <div className="rider-order-detail">
                       <span className="rider-detail-icon">
                         🏪
@@ -341,13 +338,20 @@ function RiderOrders() {
                         </strong>
                       </div>
                     </div>
-
                   </div>
 
+                  {/* ✅ 2. LIVE GPS TRACKING COMPONENT (Only shows when Out For Delivery) */}
+                  {isOutForDelivery && (
+                    <div style={{ marginTop: "15px", marginBottom: "15px" }}>
+                      <RiderLocationTracker 
+                        orderId={order.orderId} 
+                        status={order.status} 
+                      />
+                    </div>
+                  )}
+
                   {/* Footer */}
-
                   <div className="rider-order-footer">
-
                     <div className="rider-order-amount">
                       <span>Total Amount</span>
 
@@ -382,7 +386,6 @@ function RiderOrders() {
                         ✓ Delivered
                       </span>
                     )}
-
                   </div>
                 </article>
               );

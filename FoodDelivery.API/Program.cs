@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.Tasks; // Added for Task.CompletedTask
 using FoodDelivery.API.Hubs;
 using FoodDelivery.Core.Models;
 using FoodDelivery.Infrastructure.Data;
@@ -96,6 +97,23 @@ builder.Services
             ValidIssuer = jwtSettings["Issuer"],
             ValidAudience = jwtSettings["Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(key)
+        };
+
+        // ✅ CRITICAL FIX: Allow SignalR to pass the JWT token in the query string
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                
+                // If the request is for our SignalR hub, use the token from the query string
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
         };
     });
 

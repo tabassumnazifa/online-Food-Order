@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+// ✅ 1. IMPORT THE TRACKING COMPONENT (Adjust path if you put it in 'pages' instead of 'components')
+import CustomerOrderTracker from "../components/CustomerOrderTracker";
 function Orders() {
   const navigate = useNavigate();
 
@@ -265,6 +267,7 @@ function Orders() {
                 const delivered = isDelivered(order.status);
                 const showCancelButton = canCancel(order.status);
                 const locked = isLocked(order.status);
+                const isOutForDelivery = normalizeStatus(order.status) === "outfordelivery";
 
                 return (
                   <article className="customer-order-card" key={order.orderId}>
@@ -429,6 +432,19 @@ function Orders() {
                           </p>
                         </div>
                       </div>
+                    )}
+
+                    {/* =========================
+                        🗺️ LIVE ORDER TRACKING (Out For Delivery ONLY)
+                        ========================= */}
+                    {isOutForDelivery && (
+                      <CustomerOrderTracker 
+                        orderId={order.orderId} 
+                        status={order.status} 
+                        // Optional: pass actual restaurant coordinates if you have them in your DB
+                        // restaurantLat={23.8103} 
+                        // restaurantLng={90.4125} 
+                      />
                     )}
 
                     {/* CANCELLED */}
