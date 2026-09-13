@@ -28,7 +28,6 @@ namespace FoodDelivery.API.Controllers
         // =====================================
         // CREATE RESTAURANT OFFER
         // =====================================
-
         [HttpPost("create")]
         [Authorize(Roles = Roles.RestaurantOwner)]
         public async Task<IActionResult> CreateOffer(CreateOfferDto dto)
@@ -62,20 +61,14 @@ namespace FoodDelivery.API.Controllers
             };
 
             _context.Offers.Add(offer);
-
             await _context.SaveChangesAsync();
 
-            return Ok(new
-            {
-                Message = "Offer created successfully.",
-                OfferId = offer.Id
-            });
+            return Ok(new { Message = "Offer created successfully.", OfferId = offer.Id });
         }
 
         // =====================================
         // GET ACTIVE OFFERS - CUSTOMER
         // =====================================
-
         [HttpGet("active")]
         [Authorize(Roles = Roles.Customer)]
         public async Task<IActionResult> GetActiveOffers()
@@ -110,7 +103,7 @@ namespace FoodDelivery.API.Controllers
         }
 
         // =====================================
-        // VALIDATE COUPON CODE (CUSTOMER)
+        // VALIDATE COUPON CODE (CUSTOMER) - THIS WAS MISSING!
         // =====================================
         [HttpPost("validate")]
         [Authorize(Roles = Roles.Customer)]
@@ -166,12 +159,9 @@ namespace FoodDelivery.API.Controllers
         // =====================================
         // UPDATE RESTAURANT OWNER OFFER
         // =====================================
-
         [HttpPut("update/{id}")]
         [Authorize(Roles = Roles.RestaurantOwner)]
-        public async Task<IActionResult> UpdateOffer(
-            int id,
-            UpdateOfferDto dto)
+        public async Task<IActionResult> UpdateOffer(int id, UpdateOfferDto dto)
         {
             var userId = _userManager.GetUserId(User);
 
@@ -182,15 +172,8 @@ namespace FoodDelivery.API.Controllers
                     o.Restaurant != null &&
                     o.Restaurant.OwnerId == userId);
 
-            if (offer == null)
-            {
-                return NotFound("Offer not found.");
-            }
-
-            if (dto.EndDate <= dto.StartDate)
-            {
-                return BadRequest("Invalid offer duration.");
-            }
+            if (offer == null) return NotFound("Offer not found.");
+            if (dto.EndDate <= dto.StartDate) return BadRequest("Invalid offer duration.");
 
             offer.Title = dto.Title;
             offer.Description = dto.Description;
@@ -203,16 +186,12 @@ namespace FoodDelivery.API.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok(new
-            {
-                Message = "Offer updated successfully."
-            });
+            return Ok(new { Message = "Offer updated successfully." });
         }
 
         // =====================================
         // DELETE RESTAURANT OWNER OFFER
         // =====================================
-
         [HttpDelete("delete/{id}")]
         [Authorize(Roles = Roles.RestaurantOwner)]
         public async Task<IActionResult> DeleteOffer(int id)
@@ -226,25 +205,17 @@ namespace FoodDelivery.API.Controllers
                     o.Restaurant != null &&
                     o.Restaurant.OwnerId == userId);
 
-            if (offer == null)
-            {
-                return NotFound("Offer not found.");
-            }
+            if (offer == null) return NotFound("Offer not found.");
 
             _context.Offers.Remove(offer);
-
             await _context.SaveChangesAsync();
 
-            return Ok(new
-            {
-                Message = "Offer deleted successfully."
-            });
+            return Ok(new { Message = "Offer deleted successfully." });
         }
 
         // =====================================
         // ADMIN GET ALL OFFERS
         // =====================================
-
         [HttpGet("all")]
         [Authorize(Roles = Roles.Admin)]
         public async Task<IActionResult> GetAllOffers()
@@ -264,9 +235,7 @@ namespace FoodDelivery.API.Controllers
                     EndDate = o.EndDate,
                     IsActive = o.IsActive,
                     RestaurantId = o.RestaurantId,
-                    RestaurantName = o.Restaurant != null
-                        ? o.Restaurant.Name
-                        : "Platform Offer"
+                    RestaurantName = o.Restaurant != null ? o.Restaurant.Name : "Platform Offer"
                 })
                 .ToListAsync();
 
@@ -276,15 +245,11 @@ namespace FoodDelivery.API.Controllers
         // =====================================
         // ADMIN CREATE PLATFORM OFFER
         // =====================================
-
         [HttpPost("admin/create")]
         [Authorize(Roles = Roles.Admin)]
         public async Task<IActionResult> AdminCreateOffer(CreateOfferDto dto)
         {
-            if (dto.EndDate <= dto.StartDate)
-            {
-                return BadRequest("Invalid offer duration.");
-            }
+            if (dto.EndDate <= dto.StartDate) return BadRequest("Invalid offer duration.");
 
             var offer = new Offer
             {
@@ -295,48 +260,30 @@ namespace FoodDelivery.API.Controllers
                 MaximumDiscount = dto.MaximumDiscount,
                 StartDate = dto.StartDate,
                 EndDate = dto.EndDate,
-
-                // NULL means this is a system-wide platform offer.
                 RestaurantId = null,
-
                 IsActive = true
             };
 
             _context.Offers.Add(offer);
-
             await _context.SaveChangesAsync();
 
-            return Ok(new
-            {
-                Message = "Platform offer created successfully.",
-                OfferId = offer.Id
-            });
+            return Ok(new { Message = "Platform offer created successfully.", OfferId = offer.Id });
         }
 
         // =====================================
         // ADMIN DELETE OFFER
         // =====================================
-
         [HttpDelete("admin/delete/{id}")]
         [Authorize(Roles = Roles.Admin)]
         public async Task<IActionResult> AdminDeleteOffer(int id)
         {
-            var offer = await _context.Offers
-                .FirstOrDefaultAsync(o => o.Id == id);
-
-            if (offer == null)
-            {
-                return NotFound("Offer not found.");
-            }
+            var offer = await _context.Offers.FirstOrDefaultAsync(o => o.Id == id);
+            if (offer == null) return NotFound("Offer not found.");
 
             _context.Offers.Remove(offer);
-
             await _context.SaveChangesAsync();
 
-            return Ok(new
-            {
-                Message = "Offer removed by admin."
-            });
+            return Ok(new { Message = "Offer removed by admin." });
         }
     }
 }

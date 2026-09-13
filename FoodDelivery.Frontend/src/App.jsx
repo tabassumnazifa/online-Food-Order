@@ -43,6 +43,8 @@ import RestaurantDashboard from "./pages/RestaurantDashboard";
 import ManageFoods from "./pages/ManageFoods";
 import RestaurantOrders from "./pages/RestaurantOrders";
 import CreateOffer from "./pages/CreateOffer";
+import ManageOffers from "./pages/ManageOffers"; // ADDED
+import EditRestaurant from "./pages/EditRestaurant"; // ADDED
 
 // =========================
 // Rider Pages
@@ -195,6 +197,18 @@ function App() {
           <Route
             path="/restaurant/offers/create"
             element={<CreateOffer />}
+          />
+
+          {/* ADDED: Manage Offers Route */}
+          <Route
+            path="/restaurant/offers/manage"
+            element={<ManageOffers />}
+          />
+
+          {/* ADDED: Edit Restaurant Route */}
+          <Route
+            path="/restaurant/edit"
+            element={<EditRestaurant />}
           />
 
           {/* =========================

@@ -57,62 +57,63 @@ function AdminOrders() {
   };
 
   // ==========================================
-  // NEW: Helper to translate Payment Status
-  // ==========================================
-  const getPaymentStatusText = (status) => {
-    const map = { 
-      1: "Pending", 
-      2: "Paid", 
-      3: "Failed", 
-      4: "Cancelled",
-      // Fallback if backend already sends strings
-      "Pending": "Pending",
-      "Paid": "Paid",
-      "Failed": "Failed",
-      "Cancelled": "Cancelled"
-    };
-    return map[status] || status || "Unknown";
-  };
-
-  // ==========================================
-  // NEW: Helper to translate Order Status
+  // FIXED: Correct enum numbers -> text
+  // Pending=0, Accepted=1, Preparing=2,
+  // ReadyForPickup=3, OutForDelivery=4,
+  // Delivered=5, Cancelled=6
   // ==========================================
   const getOrderStatusText = (status) => {
-    const map = { 
-      1: "Placed", 
-      2: "Accepted", 
-      3: "Preparing", 
-      4: "Out for Delivery", 
-      5: "Delivered", 
+    const map = {
+      0: "Pending",
+      1: "Accepted",
+      2: "Preparing",
+      3: "Ready for Pickup",
+      4: "Out for Delivery",
+      5: "Delivered",
       6: "Cancelled",
-      // Fallback if backend already sends strings
-      "Placed": "Placed",
-      "Pending": "Placed",
-      "Accepted": "Accepted",
-      "PickedUp": "Out for Delivery",
-      "Delivered": "Delivered",
-      "Cancelled": "Cancelled"
+      Pending: "Pending",
+      Accepted: "Accepted",
+      Preparing: "Preparing",
+      ReadyForPickup: "Ready for Pickup",
+      OutForDelivery: "Out for Delivery",
+      Delivered: "Delivered",
+      Cancelled: "Cancelled",
     };
-    return map[status] || status || "Unknown";
+    return map[status] ?? (status || "Unknown");
   };
 
-  // ==========================================
-  // UPDATED: Color styles for the new text
-  // ==========================================
+  const getPaymentStatusText = (status) => {
+    const map = {
+      1: "Pending",
+      2: "Paid",
+      3: "Failed",
+      4: "Cancelled",
+      Pending: "Pending",
+      Paid: "Paid",
+      Failed: "Failed",
+      Cancelled: "Cancelled",
+    };
+    return map[status] ?? (status || "Unknown");
+  };
+
   const getStatusStyle = (status) => {
     if (status === "Delivered" || status === "Paid") {
-      return { backgroundColor: "#d4edda", color: "#155724" }; // Green
+      return { backgroundColor: "#d4edda", color: "#155724" };
     }
     if (status === "Cancelled" || status === "Failed") {
-      return { backgroundColor: "#f8d7da", color: "#721c24" }; // Red
+      return { backgroundColor: "#f8d7da", color: "#721c24" };
     }
-    if (status === "Placed" || status === "Pending" || status === "Preparing") {
-      return { backgroundColor: "#fff3cd", color: "#856404" }; // Yellow/Orange
+    if (
+      status === "Pending" ||
+      status === "Preparing" ||
+      status === "Ready for Pickup"
+    ) {
+      return { backgroundColor: "#fff3cd", color: "#856404" };
     }
-    if (status === "Accepted" || status === "PickedUp" || status === "Out for Delivery") {
-      return { backgroundColor: "#cce5ff", color: "#004085" }; // Blue
+    if (status === "Accepted" || status === "Out for Delivery") {
+      return { backgroundColor: "#cce5ff", color: "#004085" };
     }
-    return { backgroundColor: "#e2e3e5", color: "#383d41" }; // Grey
+    return { backgroundColor: "#e2e3e5", color: "#383d41" };
   };
 
   if (loading) {
@@ -204,9 +205,12 @@ function AdminOrders() {
           }}
         >
           {orders.map((order) => {
-            // Convert numbers to readable text
-            const orderStatusText = getOrderStatusText(order.orderStatus);
-            const paymentStatusText = getPaymentStatusText(order.paymentStatus);
+            const orderStatusText = getOrderStatusText(
+              order.orderStatus
+            );
+            const paymentStatusText = getPaymentStatusText(
+              order.paymentStatus
+            );
 
             return (
               <div
@@ -277,16 +281,6 @@ function AdminOrders() {
                     {paymentStatusText}
                   </span>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    navigate(`/admin/orders/${order.id}`)
-                  }
-                  style={{ marginTop: "20px" }}
-                >
-                  👁️ View Details
-                </button>
               </div>
             );
           })}

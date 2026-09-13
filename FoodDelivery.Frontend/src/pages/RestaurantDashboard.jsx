@@ -512,7 +512,7 @@ function RestaurantDashboard() {
                   </div>
 
                   <p className="restaurant-feedback-comment">
-                    “{feedback.comment}”
+                    "{feedback.comment}"
                   </p>
                 </article>
               ))}
@@ -635,6 +635,56 @@ function RestaurantDashboard() {
 
                 <span>
                   Create discounts and promotions
+                </span>
+              </div>
+
+              <span className="restaurant-action-arrow">
+                →
+              </span>
+            </button>
+
+            {/* EDIT RESTAURANT - NEW */}
+            <button
+              type="button"
+              className="restaurant-action-card"
+              onClick={() =>
+                navigate("/restaurant/edit")
+              }
+            >
+              <div className="restaurant-action-icon purple">
+                ✏️
+              </div>
+
+              <div>
+                <strong>Edit Restaurant</strong>
+
+                <span>
+                  Update your profile & about text
+                </span>
+              </div>
+
+              <span className="restaurant-action-arrow">
+                →
+              </span>
+            </button>
+
+            {/* MANAGE OFFERS - NEW */}
+            <button
+              type="button"
+              className="restaurant-action-card"
+              onClick={() =>
+                navigate("/restaurant/offers/manage")
+              }
+            >
+              <div className="restaurant-action-icon blue">
+                🎁
+              </div>
+
+              <div>
+                <strong>Manage Offers</strong>
+
+                <span>
+                  View and delete your promotions
                 </span>
               </div>
 

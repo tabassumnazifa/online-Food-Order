@@ -102,9 +102,7 @@ function Navbar() {
               🎁 Offers
             </NavLink>
 
-            <NavLink to="/privacy-security">
-              🔐 Privacy & Security
-            </NavLink>
+            
           </>
         )}
 
