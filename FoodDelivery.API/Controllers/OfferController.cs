@@ -1,4 +1,4 @@
-
+using System;
 using FoodDelivery.Core.DTOs;
 using FoodDelivery.Core.Enums;
 using FoodDelivery.Core.Models;
@@ -52,7 +52,7 @@ namespace FoodDelivery.API.Controllers
             {
                 Title = dto.Title,
                 Description = dto.Description,
-                CouponCode = dto.CouponCode,
+                CouponCode = dto.CouponCode.ToUpper(),
                 DiscountPercentage = dto.DiscountPercentage,
                 MaximumDiscount = dto.MaximumDiscount,
                 StartDate = dto.StartDate,
@@ -110,6 +110,60 @@ namespace FoodDelivery.API.Controllers
         }
 
         // =====================================
+        // VALIDATE COUPON CODE (CUSTOMER)
+        // =====================================
+        [HttpPost("validate")]
+        [Authorize(Roles = Roles.Customer)]
+        public async Task<IActionResult> ValidateCoupon(
+            [FromBody] ValidateCouponDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.CouponCode) || dto.RestaurantId <= 0)
+            {
+                return BadRequest("Invalid coupon request.");
+            }
+
+            var today = DateTime.UtcNow;
+
+            var offer = await _context.Offers
+                .FirstOrDefaultAsync(o =>
+                    o.CouponCode == dto.CouponCode.ToUpper() &&
+                    o.IsActive &&
+                    o.StartDate <= today &&
+                    o.EndDate >= today &&
+                    (o.RestaurantId == null || o.RestaurantId == dto.RestaurantId) // Platform or specific restaurant
+                );
+
+            if (offer == null)
+            {
+                return NotFound("Invalid or expired coupon code.");
+            }
+
+            // Calculate the discount based on the cart total
+            decimal discountAmount = dto.CartTotal * (offer.DiscountPercentage / 100);
+
+            // Apply maximum discount limit if it exists
+            if (offer.MaximumDiscount.HasValue && offer.MaximumDiscount.Value > 0)
+            {
+                if (discountAmount > offer.MaximumDiscount.Value)
+                {
+                    discountAmount = offer.MaximumDiscount.Value;
+                }
+            }
+
+            decimal finalTotal = dto.CartTotal - discountAmount;
+            if (finalTotal < 0) finalTotal = 0;
+
+            return Ok(new
+            {
+                message = "Coupon applied successfully!",
+                couponCode = offer.CouponCode,
+                discountPercentage = offer.DiscountPercentage,
+                discountAmount = Math.Round(discountAmount, 2),
+                finalTotal = Math.Round(finalTotal, 2)
+            });
+        }
+
+        // =====================================
         // UPDATE RESTAURANT OWNER OFFER
         // =====================================
 
@@ -140,7 +194,7 @@ namespace FoodDelivery.API.Controllers
 
             offer.Title = dto.Title;
             offer.Description = dto.Description;
-            offer.CouponCode = dto.CouponCode;
+            offer.CouponCode = dto.CouponCode.ToUpper();
             offer.DiscountPercentage = dto.DiscountPercentage;
             offer.MaximumDiscount = dto.MaximumDiscount;
             offer.StartDate = dto.StartDate;
@@ -236,7 +290,7 @@ namespace FoodDelivery.API.Controllers
             {
                 Title = dto.Title,
                 Description = dto.Description,
-                CouponCode = dto.CouponCode,
+                CouponCode = dto.CouponCode.ToUpper(),
                 DiscountPercentage = dto.DiscountPercentage,
                 MaximumDiscount = dto.MaximumDiscount,
                 StartDate = dto.StartDate,
