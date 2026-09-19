@@ -495,3 +495,4 @@ C:\Users\HP\Desktop\online Food Order\FoodDelivery.API\obj\Debug\net9.0\FoodDeli
 C:\Users\HP\Desktop\online Food Order\FoodDelivery.API\obj\Debug\net9.0\FoodDelivery.API.genruntimeconfig.cache
 C:\Users\HP\Desktop\online Food Order\FoodDelivery.API\obj\Debug\net9.0\ref\FoodDelivery.API.dll
 C:\Users\HP\Desktop\online Food Order\FoodDelivery.API\obj\Debug\net9.0\compressed\4ctceadrq8-nbsspacvly.gz
+C:\Users\HP\Desktop\online Food Order\FoodDelivery.API\obj\Debug\net9.0\compressed\xgugi3arg4-kfm98nmqcq.gz

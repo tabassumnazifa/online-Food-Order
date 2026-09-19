@@ -28,12 +28,13 @@ function DocumentViewerModal({ restaurant, onClose }) {
               isPdf(nidUrl) ? (
                 <>
                   <div style={{ ...modalStyles.image, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "48px", backgroundColor: "#f8f9fa" }}>📄 PDF</div>
-                  <a href={nidUrl} target="_blank" rel="noopener noreferrer" style={modalStyles.link}>View PDF Document ↗</a>
+                  <a href={`http://localhost:5079${nidUrl}`} target="_blank" rel="noopener noreferrer" style={modalStyles.link}>View PDF Document ↗</a>
                 </>
               ) : (
                 <>
-                  <img src={nidUrl} alt="NID" style={modalStyles.image} />
-                  <a href={nidUrl} target="_blank" rel="noopener noreferrer" style={modalStyles.link}>Open Full Size ↗</a>
+                  {/* ✅ FIXED: Added backend URL prefix */}
+                  <img src={`http://localhost:5079${nidUrl}`} alt="NID" style={modalStyles.image} />
+                  <a href={`http://localhost:5079${nidUrl}`} target="_blank" rel="noopener noreferrer" style={modalStyles.link}>Open Full Size ↗</a>
                 </>
               )
             ) : (
@@ -48,12 +49,13 @@ function DocumentViewerModal({ restaurant, onClose }) {
               isPdf(licenseUrl) ? (
                 <>
                   <div style={{ ...modalStyles.image, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "48px", backgroundColor: "#f8f9fa" }}>📄 PDF</div>
-                  <a href={licenseUrl} target="_blank" rel="noopener noreferrer" style={modalStyles.link}>View PDF Document ↗</a>
+                  <a href={`http://localhost:5079${licenseUrl}`} target="_blank" rel="noopener noreferrer" style={modalStyles.link}>View PDF Document ↗</a>
                 </>
               ) : (
                 <>
-                  <img src={licenseUrl} alt="Trade License" style={modalStyles.image} />
-                  <a href={licenseUrl} target="_blank" rel="noopener noreferrer" style={modalStyles.link}>Open Full Size ↗</a>
+                  {/* ✅ FIXED: Added backend URL prefix */}
+                  <img src={`http://localhost:5079${licenseUrl}`} alt="Trade License" style={modalStyles.image} />
+                  <a href={`http://localhost:5079${licenseUrl}`} target="_blank" rel="noopener noreferrer" style={modalStyles.link}>Open Full Size ↗</a>
                 </>
               )
             ) : (
@@ -88,7 +90,7 @@ function AdminRestaurants() {
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedRestaurant, setSelectedRestaurant] = useState(null); // ✅ ADDED STATE FOR MODAL
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
 
   useEffect(() => {
     if (!token) {
