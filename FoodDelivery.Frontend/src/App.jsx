@@ -64,6 +64,7 @@ import AdminOrders from "./pages/AdminOrders";
 import AdminOffers from "./pages/AdminOffers";
 import AdminPayments from "./pages/AdminPayments";
 import AdminPendingApprovals from "./pages/AdminPendingApprovals";
+import AdminNotifications from "./pages/AdminNotifications"; // ✅ ADDED
 
 // =========================
 // App Component
@@ -122,6 +123,7 @@ function App() {
           <Route path="/admin/orders" element={<AdminOrders />} />
           <Route path="/admin/offers" element={<AdminOffers />} />
           <Route path="/admin/payments" element={<AdminPayments />} />
+          <Route path="/admin/notifications" element={<AdminNotifications />} /> {/* ✅ ADDED */}
         </Routes>
       </main>
       <Footer />
