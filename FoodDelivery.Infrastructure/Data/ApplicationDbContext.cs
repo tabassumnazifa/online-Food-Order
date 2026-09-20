@@ -36,11 +36,10 @@ namespace FoodDelivery.Infrastructure.Data
 
         public DbSet<RiderLocation> RiderLocations { get; set; }
 
-        // =========================
-        // SECURITY / POLICY TABLE
-        // =========================
-
         public DbSet<Policy> Policies { get; set; }
+
+        // ✅ ADDED: Notifications Table
+        public DbSet<Notification> Notifications { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
