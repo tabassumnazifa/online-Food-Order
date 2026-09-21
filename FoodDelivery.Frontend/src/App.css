@@ -8979,3 +8979,160 @@ a {
   }
 }
 
+/* ==========================================
+   FIX HOME PAGE OVERLAPPING ISSUES
+   ========================================== */
+
+.home-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 80px;
+  padding: 80px 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+
+.home-hero-content {
+  flex: 1;
+  min-width: 350px;
+  max-width: 600px;
+}
+
+.home-visual {
+  flex: 1;
+  position: relative;
+  min-width: 400px;
+  max-width: 600px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 500px;
+}
+
+.home-food-card {
+  position: relative;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-radius: 24px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+  max-width: 400px;
+  width: 100%;
+}
+
+.food-emoji {
+  font-size: 120px;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.food-card-content h3 {
+  font-size: 24px;
+  color: #1f2937;
+  margin: 16px 0 8px;
+}
+
+.food-card-content p {
+  color: #6b7280;
+  font-size: 15px;
+}
+
+.food-card-badge {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #f59e0b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* FLOATING CARDS - FIXED POSITIONING */
+.floating-card {
+  position: absolute;
+  background: white;
+  padding: 16px 20px;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 2;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  max-width: 220px;
+}
+
+.floating-card span {
+  font-size: 28px;
+  display: block;
+}
+
+.floating-card strong {
+  display: block;
+  font-size: 14px;
+  color: #1f2937;
+  margin-bottom: 2px;
+}
+
+.floating-card small {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Position floating cards OUTSIDE the main burger card */
+.floating-card-top {
+  top: -20px;
+  right: -30px;
+  transform: rotate(3deg);
+}
+
+.floating-card-bottom {
+  bottom: -20px;
+  left: -30px;
+  transform: rotate(-3deg);
+}
+
+/* Responsive - stack on smaller screens */
+@media (max-width: 1024px) {
+  .home-hero {
+    flex-direction: column;
+    gap: 40px;
+  }
+  
+  .home-hero-content,
+  .home-visual {
+    min-width: 100%;
+    max-width: 100%;
+  }
+  
+  .home-visual {
+    min-height: 400px;
+  }
+  
+  .floating-card {
+    max-width: 180px;
+    padding: 12px 16px;
+  }
+  
+  .floating-card-top {
+    top: 10px;
+    right: 10px;
+  }
+  
+  .floating-card-bottom {
+    bottom: 10px;
+    left: 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .floating-card {
+    display: none; /* Hide floating cards on mobile */
+  }
+}
