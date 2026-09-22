@@ -50,7 +50,8 @@ namespace FoodDelivery.API.Controllers
                 OwnerId = ownerId,
                 IsSuspended = true,
                 SuspensionReason = "Pending Admin Verification: Owner must upload NID copy and Restaurant Trade License.",
-                SuspendedAt = DateTime.UtcNow
+                SuspendedAt = DateTime.UtcNow,
+                HasSubmittedDocuments = false // ✅ Explicitly set to false on creation
             };
 
             _context.Restaurants.Add(restaurant);
@@ -128,6 +129,10 @@ namespace FoodDelivery.API.Controllers
             await System.IO.File.WriteAllTextAsync(
                 Path.Combine(uploadsFolder, $"rest_{restaurant.Id}_docs.json"), marker);
 
+            // ✅ FIXED: Update the database to reflect that documents are now submitted
+            restaurant.HasSubmittedDocuments = true;
+            await _context.SaveChangesAsync();
+
             // ✅ UPDATE NOTIFICATION: Documents are now ready for Admin review
             var pendingNotification = await _context.Notifications
                 .FirstOrDefaultAsync(n => n.RelatedEntityId == restaurant.Id && n.RelatedEntityType == "Restaurant" && !n.IsRead);
@@ -162,20 +167,26 @@ namespace FoodDelivery.API.Controllers
             if (restaurant == null)
                 return NotFound("Restaurant not found.");
 
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-            var markerPath = Path.Combine(uploadsFolder, $"rest_{restaurant.Id}_docs.json");
-
-            var docsSubmitted = System.IO.File.Exists(markerPath);
+            // ✅ FIXED: Use the database property instead of relying solely on the file system
+            bool docsSubmitted = restaurant.HasSubmittedDocuments;
+            
             string? nidUrl = null;
             string? licenseUrl = null;
 
+            // Only try to read the file if the database says documents were submitted
             if (docsSubmitted)
             {
-                var json = await System.IO.File.ReadAllTextAsync(markerPath);
-                using var doc = JsonDocument.Parse(json);
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+                var markerPath = Path.Combine(uploadsFolder, $"rest_{restaurant.Id}_docs.json");
 
-                nidUrl = $"/uploads/{doc.RootElement.GetProperty("nid").GetString()}";
-                licenseUrl = $"/uploads/{doc.RootElement.GetProperty("license").GetString()}";
+                if (System.IO.File.Exists(markerPath))
+                {
+                    var json = await System.IO.File.ReadAllTextAsync(markerPath);
+                    using var doc = JsonDocument.Parse(json);
+
+                    nidUrl = $"/uploads/{doc.RootElement.GetProperty("nid").GetString()}";
+                    licenseUrl = $"/uploads/{doc.RootElement.GetProperty("license").GetString()}";
+                }
             }
 
             return Ok(new
@@ -184,7 +195,7 @@ namespace FoodDelivery.API.Controllers
                 RestaurantName = restaurant.Name,
                 IsSuspended = restaurant.IsSuspended,
                 SuspensionReason = restaurant.SuspensionReason,
-                DocsSubmitted = docsSubmitted,
+                DocsSubmitted = docsSubmitted, // This will now be 100% accurate per user
                 NidUrl = nidUrl,
                 LicenseUrl = licenseUrl
             });

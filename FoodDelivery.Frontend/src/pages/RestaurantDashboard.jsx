@@ -13,7 +13,6 @@ function RestaurantDashboard() {
   const [error, setError] = useState("");
 
   const token = localStorage.getItem("token");
-
   const API_URL = "http://localhost:5079/api";
 
   const authConfig = {
@@ -25,7 +24,6 @@ function RestaurantDashboard() {
   // ==========================================
   // INITIAL LOAD
   // ==========================================
-
   useEffect(() => {
     if (!token) {
       navigate("/login");
@@ -38,7 +36,6 @@ function RestaurantDashboard() {
   // ==========================================
   // LOAD ALL DASHBOARD DATA
   // ==========================================
-
   const loadDashboard = async () => {
     try {
       setLoading(true);
@@ -59,7 +56,6 @@ function RestaurantDashboard() {
   // ==========================================
   // FETCH DASHBOARD STATISTICS
   // ==========================================
-
   const fetchDashboard = async () => {
     try {
       const response = await axios.get(
@@ -89,7 +85,6 @@ function RestaurantDashboard() {
   // ==========================================
   // FETCH MY RESTAURANT (WITH BOUNCER LOGIC)
   // ==========================================
-
   const fetchRestaurant = async () => {
     try {
       const response = await axios.get(
@@ -126,7 +121,6 @@ function RestaurantDashboard() {
   // ==========================================
   // FETCH CUSTOMER FEEDBACK
   // ==========================================
-
   const fetchFeedbacks = async () => {
     try {
       setFeedbackLoading(true);
@@ -158,7 +152,6 @@ function RestaurantDashboard() {
   // ==========================================
   // CALCULATE AVERAGE RATING
   // ==========================================
-
   const averageRating =
     feedbacks.length > 0
       ? (
@@ -173,7 +166,6 @@ function RestaurantDashboard() {
   // ==========================================
   // RENDER STARS
   // ==========================================
-
   const renderStars = (rating) => {
     const numericRating = Number(rating);
 
@@ -191,7 +183,6 @@ function RestaurantDashboard() {
   // ==========================================
   // LOADING
   // ==========================================
-
   if (loading) {
     return (
       <main className="restaurant-dashboard-page">
@@ -209,7 +200,6 @@ function RestaurantDashboard() {
   // ==========================================
   // RESTAURANT NOT FOUND
   // ==========================================
-
   if (error && !restaurant && !dashboard) {
     return (
       <main className="restaurant-dashboard-page">
@@ -386,6 +376,11 @@ function RestaurantDashboard() {
               <span className="restaurant-action-arrow">→</span>
             </button>
 
+            {/* 
+              NOTE: "Manage Offers" button intentionally removed. 
+              Only Super Admin can view/delete system-wide promotions to maintain platform consistency.
+              "Create Offer" is kept as a placeholder for future role-specific promo requests.
+            */}
             <button type="button" className="restaurant-action-card" onClick={() => navigate("/restaurant/offers/create")}>
               <div className="restaurant-action-icon orange">🎁</div>
               <div><strong>Create Offer</strong><span>Create discounts and promotions</span></div>
@@ -395,12 +390,6 @@ function RestaurantDashboard() {
             <button type="button" className="restaurant-action-card" onClick={() => navigate("/restaurant/edit")}>
               <div className="restaurant-action-icon purple">✏️</div>
               <div><strong>Edit Restaurant</strong><span>Update your profile & about text</span></div>
-              <span className="restaurant-action-arrow">→</span>
-            </button>
-
-            <button type="button" className="restaurant-action-card" onClick={() => navigate("/restaurant/offers/manage")}>
-              <div className="restaurant-action-icon blue">🎁</div>
-              <div><strong>Manage Offers</strong><span>View and delete your promotions</span></div>
               <span className="restaurant-action-arrow">→</span>
             </button>
           </div>

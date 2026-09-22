@@ -33,8 +33,8 @@ namespace FoodDelivery.Core.Models
         public string? ImageUrl { get; set; }
 
 
-        // =========================
-        // RESTAURANT SUSPENSION
+                // =========================
+        // RESTAURANT SUSPENSION & VERIFICATION
         // =========================
 
         public bool IsSuspended { get; set; } = false;
@@ -43,7 +43,8 @@ namespace FoodDelivery.Core.Models
 
         public DateTime? SuspendedAt { get; set; }
 
-
+        
+        public bool HasSubmittedDocuments { get; set; } = false;
         // =========================
         // RESTAURANT OWNER
         // =========================
